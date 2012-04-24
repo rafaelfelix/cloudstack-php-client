@@ -1,7 +1,7 @@
 CloudStack PHP Client
 =====================
 
-PHP client library for the CloudStack Root Admin API v2.2 (Reference : http://download.cloud.com/releases/2.2.0/api_2.2.14/TOC_Root_Admin.html)
+PHP client library for the CloudStack Root Admin API v3.0 (Reference : http://download.cloud.com/releases/3.0.0/api_3.0.0/TOC_Root_Admin.html)
 
 Examples
 --------
