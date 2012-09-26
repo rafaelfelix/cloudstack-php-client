@@ -120,6 +120,8 @@ class CloudStackClient extends BaseCloudStackClient {
     * @param string $availability the availability of network offering. Default value 
     *        is Required
     * @param string $displayText list network offerings by display text
+    * @param string $forVpc the network offering can be used only for network creation
+    *         inside the VPC
     * @param string $guestIpType list network offerings by guest type: Shared or Isola
     *        ted
     * @param string $id list network offerings by id
@@ -147,11 +149,12 @@ class CloudStackClient extends BaseCloudStackClient {
     * @param string $page Pagination
     */
     
-    public function listNetworkOfferings($availability = "", $displayText = "", $guestIpType = "", $id = "", $isDefault = "", $isTagged = "", $keyword = "", $name = "", $networkId = "", $page = "", $pageSize = "", $sourceNatSupported = "", $specifyIpRanges = "", $specifyVlan = "", $state = "", $supportedServices = "", $tags = "", $trafficType = "", $zoneId = "", $page = "") {
+    public function listNetworkOfferings($availability = "", $displayText = "", $forVpc = "", $guestIpType = "", $id = "", $isDefault = "", $isTagged = "", $keyword = "", $name = "", $networkId = "", $page = "", $pageSize = "", $sourceNatSupported = "", $specifyIpRanges = "", $specifyVlan = "", $state = "", $supportedServices = "", $tags = "", $trafficType = "", $zoneId = "", $page = "") {
 
         return $this->request("listNetworkOfferings", array(
             'availability' => $availability,
             'displaytext' => $displayText,
+            'forvpc' => $forVpc,
             'guestiptype' => $guestIpType,
             'id' => $id,
             'isdefault' => $isDefault,
@@ -188,8 +191,10 @@ class CloudStackClient extends BaseCloudStackClient {
     * @param string $domainId domain ID of the account owning a network
     * @param string $endIp the ending IP address in the network IP range. If not speci
     *        fied, will be defaulted to startIP
-    * @param string $gateway the gateway of the network
-    * @param string $netmask the netmask of the network
+    * @param string $gateway the gateway of the network. Required for Shared networks 
+    *        and Isolated networks when it belongs to VPC
+    * @param string $netmask the netmask of the network. Required for Shared networks 
+    *        and Isolated networks when it belongs to VPC
     * @param string $networkDomain network domain
     * @param string $physicalNetworkId the Physical Network ID the network belongs to
     * @param string $projectId an optional project for the ssh key
@@ -198,9 +203,10 @@ class CloudStackClient extends BaseCloudStackClient {
     *        ks dedicated to their parent domain(s). Should be used with aclType=Domain, defa
     *        ulted to allow.subdomain.network.access global config if not specified
     * @param string $vlan the ID or VID of the network
+    * @param string $vpcId the VPC network belongs to
     */
     
-    public function createNetwork($displayText, $name, $networkOfferingId, $zoneId, $account = "", $aclType = "", $domainId = "", $endIp = "", $gateway = "", $netmask = "", $networkDomain = "", $physicalNetworkId = "", $projectId = "", $startIp = "", $subdomainAccess = "", $vlan = "") {
+    public function createNetwork($displayText, $name, $networkOfferingId, $zoneId, $account = "", $aclType = "", $domainId = "", $endIp = "", $gateway = "", $netmask = "", $networkDomain = "", $physicalNetworkId = "", $projectId = "", $startIp = "", $subdomainAccess = "", $vlan = "", $vpcId = "") {
 
         if (empty($displayText)) {
             throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "displayText"), MISSING_ARGUMENT);
@@ -235,6 +241,7 @@ class CloudStackClient extends BaseCloudStackClient {
             'startip' => $startIp,
             'subdomainaccess' => $subdomainAccess,
             'vlan' => $vlan,
+            'vpcid' => $vpcId,
         ));
     }
     
@@ -262,7 +269,9 @@ class CloudStackClient extends BaseCloudStackClient {
     *         parameter.
     * @param string $aclType list networks by ACL (access control list) type. Supporte
     *        d values are Account and Domain
+    * @param string $canUseForDeploy list networks available for vm deployment
     * @param string $domainId list only resources belonging to the domain specified
+    * @param string $forVpc the network belongs to vpc
     * @param string $id list networks by id
     * @param string $isRecursive defaults to false, but if true, lists all resources f
     *        rom the parent specified by the domainId till leaves.
@@ -274,25 +283,28 @@ class CloudStackClient extends BaseCloudStackClient {
     * @param string $page 
     * @param string $pageSize 
     * @param string $physicalNetworkId list networks by physical network id
-    * @param string $projectId list firewall rules by project
-    * @param string $restartRequired list network offerings by restartRequired option
+    * @param string $projectId list objects by project
+    * @param string $restartRequired list networks by restartRequired
     * @param string $specifyIpRanges true if need to list only networks which support 
     *        specifying ip ranges
-    * @param string $supportedServices list network offerings supporting certain servi
-    *        ces
+    * @param string $supportedServices list networks supporting certain services
+    * @param string $tags List resources by tags (key/value pairs)
     * @param string $trafficType type of the traffic
     * @param string $type the type of the network. Supported values are: Isolated and 
     *        Shared
+    * @param string $vpcId List networks by VPC
     * @param string $zoneId the Zone ID of the network
     * @param string $page Pagination
     */
     
-    public function listNetworks($account = "", $aclType = "", $domainId = "", $id = "", $isRecursive = "", $isSystem = "", $keyword = "", $listAll = "", $page = "", $pageSize = "", $physicalNetworkId = "", $projectId = "", $restartRequired = "", $specifyIpRanges = "", $supportedServices = "", $trafficType = "", $type = "", $zoneId = "", $page = "") {
+    public function listNetworks($account = "", $aclType = "", $canUseForDeploy = "", $domainId = "", $forVpc = "", $id = "", $isRecursive = "", $isSystem = "", $keyword = "", $listAll = "", $page = "", $pageSize = "", $physicalNetworkId = "", $projectId = "", $restartRequired = "", $specifyIpRanges = "", $supportedServices = "", $tags = "", $trafficType = "", $type = "", $vpcId = "", $zoneId = "", $page = "") {
 
         return $this->request("listNetworks", array(
             'account' => $account,
             'acltype' => $aclType,
+            'canusefordeploy' => $canUseForDeploy,
             'domainid' => $domainId,
+            'forvpc' => $forVpc,
             'id' => $id,
             'isrecursive' => $isRecursive,
             'issystem' => $isSystem,
@@ -305,8 +317,10 @@ class CloudStackClient extends BaseCloudStackClient {
             'restartrequired' => $restartRequired,
             'specifyipranges' => $specifyIpRanges,
             'supportedservices' => $supportedServices,
+            'tags' => $tags,
             'traffictype' => $trafficType,
             'type' => $type,
+            'vpcid' => $vpcId,
             'zoneid' => $zoneId,
             'page' => $page,
         ));
@@ -753,284 +767,197 @@ class CloudStackClient extends BaseCloudStackClient {
     }
     
     /**
-    * lists network that are using a F5 load balancer device
+    * Creates a ACL rule the given network (the network has to belong to VPC)
     *
-    * @param string $lbDeviceId f5 load balancer device ID
-    * @param string $keyword List by keyword
-    * @param string $page 
-    * @param string $pageSize 
-    * @param string $page Pagination
+    * @param string $networkId The network of the vm the ACL will be created for
+    * @param string $protocol the protocol for the ACL rule. Valid values are TCP/UDP/
+    *        ICMP.
+    * @param string $cidrList the cidr list to allow traffic from/to
+    * @param string $endPort the ending port of ACL
+    * @param string $icmpCode error code for this icmp message
+    * @param string $icmpType type of the icmp message being sent
+    * @param string $startPort the starting port of ACL
+    * @param string $trafficType the traffic type for the ACL,can be Ingress or Egress
+    *        , defaulted to Ingress if not specified
     */
     
-    public function listF5LoadBalancerNetworks($lbDeviceId, $keyword = "", $page = "", $pageSize = "", $page = "") {
+    public function createNetworkACL($networkId, $protocol, $cidrList = "", $endPort = "", $icmpCode = "", $icmpType = "", $startPort = "", $trafficType = "") {
 
-        if (empty($lbDeviceId)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "lbDeviceId"), MISSING_ARGUMENT);
+        if (empty($networkId)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "networkId"), MISSING_ARGUMENT);
         }
 
-        return $this->request("listF5LoadBalancerNetworks", array(
-            'lbdeviceid' => $lbDeviceId,
-            'keyword' => $keyword,
-            'page' => $page,
-            'pagesize' => $pageSize,
-            'page' => $page,
-        ));
-    }
-    
-    /**
-    * lists network that are using SRX firewall device
-    *
-    * @param string $lbDeviceId netscaler load balancer device ID
-    * @param string $keyword List by keyword
-    * @param string $page 
-    * @param string $pageSize 
-    * @param string $page Pagination
-    */
-    
-    public function listSrxFirewallNetworks($lbDeviceId, $keyword = "", $page = "", $pageSize = "", $page = "") {
-
-        if (empty($lbDeviceId)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "lbDeviceId"), MISSING_ARGUMENT);
+        if (empty($protocol)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "protocol"), MISSING_ARGUMENT);
         }
 
-        return $this->request("listSrxFirewallNetworks", array(
-            'lbdeviceid' => $lbDeviceId,
-            'keyword' => $keyword,
-            'page' => $page,
-            'pagesize' => $pageSize,
-            'page' => $page,
-        ));
-    }
-    
-    /**
-    * lists network that are using a netscaler load balancer device
-    *
-    * @param string $lbDeviceId netscaler load balancer device ID
-    * @param string $keyword List by keyword
-    * @param string $page 
-    * @param string $pageSize 
-    * @param string $page Pagination
-    */
-    
-    public function listNetscalerLoadBalancerNetworks($lbDeviceId, $keyword = "", $page = "", $pageSize = "", $page = "") {
-
-        if (empty($lbDeviceId)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "lbDeviceId"), MISSING_ARGUMENT);
-        }
-
-        return $this->request("listNetscalerLoadBalancerNetworks", array(
-            'lbdeviceid' => $lbDeviceId,
-            'keyword' => $keyword,
-            'page' => $page,
-            'pagesize' => $pageSize,
-            'page' => $page,
-        ));
-    }
-    
-    /**
-    * Creates a load balancer rule
-    *
-    * @param string $algorithm load balancer algorithm (source, roundrobin, leastconn)
-    *        
-    * @param string $name name of the load balancer rule
-    * @param string $privatePort the private port of the private ip address/virtual ma
-    *        chine where the network traffic will be load balanced to
-    * @param string $publicPort the public port from where the network traffic will be
-    *         load balanced from
-    * @param string $account the account associated with the load balancer. Must be us
-    *        ed with the domainId parameter.
-    * @param string $cidrList the cidr list to forward traffic from
-    * @param string $description the description of the load balancer rule
-    * @param string $domainId the domain ID associated with the load balancer
-    * @param string $networkId The guest network this rule will be created for
-    * @param string $openFirewall if true, firewall rule for source/end pubic port is 
-    *        automatically created; if false - firewall rule has to be created explicitely. H
-    *        as value true by default
-    * @param string $publicIpId public ip address id from where the network traffic wi
-    *        ll be load balanced from
-    * @param string $zoneId zone where the load balancer is going to be created. This 
-    *        parameter is required when LB service provider is ElasticLoadBalancerVm
-    */
-    
-    public function createLoadBalancerRule($algorithm, $name, $privatePort, $publicPort, $account = "", $cidrList = "", $description = "", $domainId = "", $networkId = "", $openFirewall = "", $publicIpId = "", $zoneId = "") {
-
-        if (empty($algorithm)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "algorithm"), MISSING_ARGUMENT);
-        }
-
-        if (empty($name)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "name"), MISSING_ARGUMENT);
-        }
-
-        if (empty($privatePort)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "privatePort"), MISSING_ARGUMENT);
-        }
-
-        if (empty($publicPort)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "publicPort"), MISSING_ARGUMENT);
-        }
-
-        return $this->request("createLoadBalancerRule", array(
-            'algorithm' => $algorithm,
-            'name' => $name,
-            'privateport' => $privatePort,
-            'publicport' => $publicPort,
-            'account' => $account,
-            'cidrlist' => $cidrList,
-            'description' => $description,
-            'domainid' => $domainId,
+        return $this->request("createNetworkACL", array(
             'networkid' => $networkId,
-            'openfirewall' => $openFirewall,
-            'publicipid' => $publicIpId,
-            'zoneid' => $zoneId,
+            'protocol' => $protocol,
+            'cidrlist' => $cidrList,
+            'endport' => $endPort,
+            'icmpcode' => $icmpCode,
+            'icmptype' => $icmpType,
+            'startport' => $startPort,
+            'traffictype' => $trafficType,
         ));
     }
     
     /**
-    * Deletes a load balancer rule.
+    * Deletes a Network ACL
     *
-    * @param string $id the ID of the load balancer rule
+    * @param string $id the ID of the network ACL
     */
     
-    public function deleteLoadBalancerRule($id) {
+    public function deleteNetworkACL($id) {
 
         if (empty($id)) {
             throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
         }
 
-        return $this->request("deleteLoadBalancerRule", array(
+        return $this->request("deleteNetworkACL", array(
             'id' => $id,
         ));
     }
     
     /**
-    * Removes a virtual machine or a list of virtual machines from a load balancer rule.
-    *
-    * @param string $id The ID of the load balancer rule
-    * @param string $virtualMachineIds the list of IDs of the virtual machines that ar
-    *        e being removed from the load balancer rule (i.e. virtualMachineIds=1,2,3)
-    */
-    
-    public function removeFromLoadBalancerRule($id, $virtualMachineIds) {
-
-        if (empty($id)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
-        }
-
-        if (empty($virtualMachineIds)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "virtualMachineIds"), MISSING_ARGUMENT);
-        }
-
-        return $this->request("removeFromLoadBalancerRule", array(
-            'id' => $id,
-            'virtualmachineids' => $virtualMachineIds,
-        ));
-    }
-    
-    /**
-    * Assigns virtual machine or a list of virtual machines to a load balancer rule.
-    *
-    * @param string $id the ID of the load balancer rule
-    * @param string $virtualMachineIds the list of IDs of the virtual machine that are
-    *         being assigned to the load balancer rule(i.e. virtualMachineIds=1,2,3)
-    */
-    
-    public function assignToLoadBalancerRule($id, $virtualMachineIds) {
-
-        if (empty($id)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
-        }
-
-        if (empty($virtualMachineIds)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "virtualMachineIds"), MISSING_ARGUMENT);
-        }
-
-        return $this->request("assignToLoadBalancerRule", array(
-            'id' => $id,
-            'virtualmachineids' => $virtualMachineIds,
-        ));
-    }
-    
-    /**
-    * Creates a Load Balancer stickiness policy
-    *
-    * @param string $lbRuleId the ID of the load balancer rule
-    * @param string $methodName name of the LB Stickiness policy method, possible valu
-    *        es can be obtained from ListNetworks API
-    * @param string $name name of the LB Stickiness policy
-    * @param string $description the description of the LB Stickiness policy
-    * @param string $param param list. Example: param[0].name=cookiename&amp;amp;param
-    *        [0].value=LBCookie
-    */
-    
-    public function createLBStickinessPolicy($lbRuleId, $methodName, $name, $description = "", $param = "") {
-
-        if (empty($lbRuleId)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "lbRuleId"), MISSING_ARGUMENT);
-        }
-
-        if (empty($methodName)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "methodName"), MISSING_ARGUMENT);
-        }
-
-        if (empty($name)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "name"), MISSING_ARGUMENT);
-        }
-
-        return $this->request("createLBStickinessPolicy", array(
-            'lbruleid' => $lbRuleId,
-            'methodname' => $methodName,
-            'name' => $name,
-            'description' => $description,
-            'param' => $param,
-        ));
-    }
-    
-    /**
-    * Deletes a LB stickiness policy.
-    *
-    * @param string $id the ID of the LB stickiness policy
-    */
-    
-    public function deleteLBStickinessPolicy($id) {
-
-        if (empty($id)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
-        }
-
-        return $this->request("deleteLBStickinessPolicy", array(
-            'id' => $id,
-        ));
-    }
-    
-    /**
-    * Lists load balancer rules.
+    * Lists all network ACLs
     *
     * @param string $account List resources by account. Must be used with the domainId
     *         parameter.
     * @param string $domainId list only resources belonging to the domain specified
-    * @param string $id the ID of the load balancer rule
+    * @param string $id Lists network ACL with the specified ID.
     * @param string $isRecursive defaults to false, but if true, lists all resources f
     *        rom the parent specified by the domainId till leaves.
     * @param string $keyword List by keyword
     * @param string $listAll If set to false, list only resources belonging to the com
     *        mand&#039;s caller; if set to true - list resources that the caller is authorize
     *        d to see. Default value is false
-    * @param string $name the name of the load balancer rule
+    * @param string $networkId list network ACLs by network Id
     * @param string $page 
     * @param string $pageSize 
-    * @param string $projectId list firewall rules by project
-    * @param string $publicIpId the public IP address id of the load balancer rule
-    * @param string $virtualMachineId the ID of the virtual machine of the load balanc
-    *        er rule
-    * @param string $zoneId the availability zone ID
+    * @param string $projectId list objects by project
+    * @param string $tags List resources by tags (key/value pairs)
+    * @param string $trafficType list network ACLs by traffic type - Ingress or Egress
+    *        
     * @param string $page Pagination
     */
     
-    public function listLoadBalancerRules($account = "", $domainId = "", $id = "", $isRecursive = "", $keyword = "", $listAll = "", $name = "", $page = "", $pageSize = "", $projectId = "", $publicIpId = "", $virtualMachineId = "", $zoneId = "", $page = "") {
+    public function listNetworkACLs($account = "", $domainId = "", $id = "", $isRecursive = "", $keyword = "", $listAll = "", $networkId = "", $page = "", $pageSize = "", $projectId = "", $tags = "", $trafficType = "", $page = "") {
 
-        return $this->request("listLoadBalancerRules", array(
+        return $this->request("listNetworkACLs", array(
             'account' => $account,
+            'domainid' => $domainId,
+            'id' => $id,
+            'isrecursive' => $isRecursive,
+            'keyword' => $keyword,
+            'listall' => $listAll,
+            'networkid' => $networkId,
+            'page' => $page,
+            'pagesize' => $pageSize,
+            'projectid' => $projectId,
+            'tags' => $tags,
+            'traffictype' => $trafficType,
+            'page' => $page,
+        ));
+    }
+    
+    /**
+    * Creates a VPC
+    *
+    * @param string $cidr the cidr of the VPC. All VPC guest networks&#039; cidrs shou
+    *        ld be within this CIDR
+    * @param string $displayText the display text of the VPC
+    * @param string $name the name of the VPC
+    * @param string $vpcOfferingId the ID of the VPC offering
+    * @param string $zoneId the ID of the availability zone
+    * @param string $account the account associated with the VPC. Must be used with th
+    *        e domainId parameter.
+    * @param string $domainId the domain ID associated with the VPC. If used with the 
+    *        account parameter returns the VPC associated with the account for the specified 
+    *        domain.
+    * @param string $networkDomain VPC network domain. All networks inside the VPC wil
+    *        l belong to this domain
+    * @param string $projectId create VPC for the project
+    */
+    
+    public function createVPC($cidr, $displayText, $name, $vpcOfferingId, $zoneId, $account = "", $domainId = "", $networkDomain = "", $projectId = "") {
+
+        if (empty($cidr)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "cidr"), MISSING_ARGUMENT);
+        }
+
+        if (empty($displayText)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "displayText"), MISSING_ARGUMENT);
+        }
+
+        if (empty($name)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "name"), MISSING_ARGUMENT);
+        }
+
+        if (empty($vpcOfferingId)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "vpcOfferingId"), MISSING_ARGUMENT);
+        }
+
+        if (empty($zoneId)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "zoneId"), MISSING_ARGUMENT);
+        }
+
+        return $this->request("createVPC", array(
+            'cidr' => $cidr,
+            'displaytext' => $displayText,
+            'name' => $name,
+            'vpcofferingid' => $vpcOfferingId,
+            'zoneid' => $zoneId,
+            'account' => $account,
+            'domainid' => $domainId,
+            'networkdomain' => $networkDomain,
+            'projectid' => $projectId,
+        ));
+    }
+    
+    /**
+    * Lists VPCs
+    *
+    * @param string $account list by account associated with the VPC. Must be used wit
+    *        h the domainId parameter.
+    * @param string $account List resources by account. Must be used with the domainId
+    *         parameter.
+    * @param string $cidr list by cidr of the VPC. All VPC guest networks&#039; cidrs 
+    *        should be within this CIDR
+    * @param string $displayText List by display text of the VPC
+    * @param string $domainId list by domain ID associated with the VPC. If used with 
+    *        the account parameter returns the VPC associated with the account for the specif
+    *        ied domain.
+    * @param string $domainId list only resources belonging to the domain specified
+    * @param string $id list VPC by id
+    * @param string $isRecursive defaults to false, but if true, lists all resources f
+    *        rom the parent specified by the domainId till leaves.
+    * @param string $keyword List by keyword
+    * @param string $listAll If set to false, list only resources belonging to the com
+    *        mand&#039;s caller; if set to true - list resources that the caller is authorize
+    *        d to see. Default value is false
+    * @param string $name list by name of the VPC
+    * @param string $page 
+    * @param string $pageSize 
+    * @param string $projectId list objects by project
+    * @param string $restartRequired list VPCs by restartRequired option
+    * @param string $state list VPCs by state
+    * @param string $supportedServices list VPC supporting certain services
+    * @param string $tags List resources by tags (key/value pairs)
+    * @param string $vpcOfferingId list by ID of the VPC offering
+    * @param string $zoneId list by zone
+    * @param string $page Pagination
+    */
+    
+    public function listVPCs($account = "", $account = "", $cidr = "", $displayText = "", $domainId = "", $domainId = "", $id = "", $isRecursive = "", $keyword = "", $listAll = "", $name = "", $page = "", $pageSize = "", $projectId = "", $restartRequired = "", $state = "", $supportedServices = "", $tags = "", $vpcOfferingId = "", $zoneId = "", $page = "") {
+
+        return $this->request("listVPCs", array(
+            'account' => $account,
+            'account' => $account,
+            'cidr' => $cidr,
+            'displaytext' => $displayText,
+            'domainid' => $domainId,
             'domainid' => $domainId,
             'id' => $id,
             'isrecursive' => $isRecursive,
@@ -1040,296 +967,341 @@ class CloudStackClient extends BaseCloudStackClient {
             'page' => $page,
             'pagesize' => $pageSize,
             'projectid' => $projectId,
-            'publicipid' => $publicIpId,
-            'virtualmachineid' => $virtualMachineId,
+            'restartrequired' => $restartRequired,
+            'state' => $state,
+            'supportedservices' => $supportedServices,
+            'tags' => $tags,
+            'vpcofferingid' => $vpcOfferingId,
             'zoneid' => $zoneId,
             'page' => $page,
         ));
     }
     
     /**
-    * Lists LBStickiness policies.
+    * Deletes a VPC
     *
-    * @param string $lbRuleId the ID of the load balancer rule
-    * @param string $keyword List by keyword
-    * @param string $page 
-    * @param string $pageSize 
-    * @param string $page Pagination
+    * @param string $id the ID of the VPC
     */
     
-    public function listLBStickinessPolicies($lbRuleId, $keyword = "", $page = "", $pageSize = "", $page = "") {
-
-        if (empty($lbRuleId)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "lbRuleId"), MISSING_ARGUMENT);
-        }
-
-        return $this->request("listLBStickinessPolicies", array(
-            'lbruleid' => $lbRuleId,
-            'keyword' => $keyword,
-            'page' => $page,
-            'pagesize' => $pageSize,
-            'page' => $page,
-        ));
-    }
-    
-    /**
-    * List all virtual machine instances that are assigned to a load balancer rule.
-    *
-    * @param string $id the ID of the load balancer rule
-    * @param string $applied true if listing all virtual machines currently applied to
-    *         the load balancer rule; default is true
-    * @param string $keyword List by keyword
-    * @param string $page 
-    * @param string $pageSize 
-    * @param string $page Pagination
-    */
-    
-    public function listLoadBalancerRuleInstances($id, $applied = "", $keyword = "", $page = "", $pageSize = "", $page = "") {
+    public function deleteVPC($id) {
 
         if (empty($id)) {
             throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
         }
 
-        return $this->request("listLoadBalancerRuleInstances", array(
+        return $this->request("deleteVPC", array(
             'id' => $id,
-            'applied' => $applied,
-            'keyword' => $keyword,
-            'page' => $page,
-            'pagesize' => $pageSize,
-            'page' => $page,
         ));
     }
     
     /**
-    * Updates load balancer
+    * Updates a VPC
     *
-    * @param string $id the id of the load balancer rule to update
-    * @param string $algorithm load balancer algorithm (source, roundrobin, leastconn)
-    *        
-    * @param string $description the description of the load balancer rule
-    * @param string $name the name of the load balancer rule
+    * @param string $displayText the display text of the VPC
+    * @param string $id the id of the VPC
+    * @param string $name the name of the VPC
     */
     
-    public function updateLoadBalancerRule($id, $algorithm = "", $description = "", $name = "") {
+    public function updateVPC($displayText = "", $id = "", $name = "") {
 
-        if (empty($id)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
-        }
-
-        return $this->request("updateLoadBalancerRule", array(
+        return $this->request("updateVPC", array(
+            'displaytext' => $displayText,
             'id' => $id,
-            'algorithm' => $algorithm,
-            'description' => $description,
             'name' => $name,
         ));
     }
     
     /**
-    * Adds a F5 BigIP load balancer device
+    * Restarts a VPC
     *
-    * @param string $networkDeviceType supports only F5BigIpLoadBalancer
-    * @param string $password Credentials to reach F5 BigIP load balancer device
-    * @param string $physicalNetworkId the Physical Network ID
-    * @param string $url URL of the F5 load balancer appliance.
-    * @param string $userName Credentials to reach F5 BigIP load balancer device
+    * @param string $id the id of the VPC
     */
     
-    public function addF5LoadBalancer($networkDeviceType, $password, $physicalNetworkId, $url, $userName) {
+    public function restartVPC($id = "") {
 
-        if (empty($networkDeviceType)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "networkDeviceType"), MISSING_ARGUMENT);
-        }
-
-        if (empty($password)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "password"), MISSING_ARGUMENT);
-        }
-
-        if (empty($physicalNetworkId)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "physicalNetworkId"), MISSING_ARGUMENT);
-        }
-
-        if (empty($url)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "url"), MISSING_ARGUMENT);
-        }
-
-        if (empty($userName)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "userName"), MISSING_ARGUMENT);
-        }
-
-        return $this->request("addF5LoadBalancer", array(
-            'networkdevicetype' => $networkDeviceType,
-            'password' => $password,
-            'physicalnetworkid' => $physicalNetworkId,
-            'url' => $url,
-            'username' => $userName,
+        return $this->request("restartVPC", array(
+            'id' => $id,
         ));
     }
     
     /**
-    * configures a F5 load balancer device
+    * Creates VPC offering
     *
-    * @param string $lbDeviceId F5 load balancer device ID
-    * @param string $lbDeviceCapacity capacity of the device, Capacity will be interpr
-    *        eted as number of networks device can handle
+    * @param string $displayText the display text of the vpc offering
+    * @param string $name the name of the vpc offering
+    * @param string $supportedServices services supported by the vpc offering
     */
     
-    public function configureF5LoadBalancer($lbDeviceId, $lbDeviceCapacity = "") {
+    public function createVPCOffering($displayText, $name, $supportedServices) {
 
-        if (empty($lbDeviceId)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "lbDeviceId"), MISSING_ARGUMENT);
+        if (empty($displayText)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "displayText"), MISSING_ARGUMENT);
         }
 
-        return $this->request("configureF5LoadBalancer", array(
-            'lbdeviceid' => $lbDeviceId,
-            'lbdevicecapacity' => $lbDeviceCapacity,
+        if (empty($name)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "name"), MISSING_ARGUMENT);
+        }
+
+        if (empty($supportedServices)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "supportedServices"), MISSING_ARGUMENT);
+        }
+
+        return $this->request("createVPCOffering", array(
+            'displaytext' => $displayText,
+            'name' => $name,
+            'supportedservices' => $supportedServices,
         ));
     }
     
     /**
-    * delete a F5 load balancer device
+    * Updates VPC offering
     *
-    * @param string $lbDeviceId netscaler load balancer device ID
+    * @param string $displayText the display text of the VPC offering
+    * @param string $id the id of the VPC offering
+    * @param string $name the name of the VPC offering
+    * @param string $state update state for the VPC offering; supported states - Enabl
+    *        ed/Disabled
     */
     
-    public function deleteF5LoadBalancer($lbDeviceId) {
+    public function updateVPCOffering($displayText = "", $id = "", $name = "", $state = "") {
 
-        if (empty($lbDeviceId)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "lbDeviceId"), MISSING_ARGUMENT);
-        }
-
-        return $this->request("deleteF5LoadBalancer", array(
-            'lbdeviceid' => $lbDeviceId,
+        return $this->request("updateVPCOffering", array(
+            'displaytext' => $displayText,
+            'id' => $id,
+            'name' => $name,
+            'state' => $state,
         ));
     }
     
     /**
-    * lists F5 load balancer devices
+    * Deletes VPC offering
     *
+    * @param string $id the ID of the VPC offering
+    */
+    
+    public function deleteVPCOffering($id) {
+
+        if (empty($id)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
+        }
+
+        return $this->request("deleteVPCOffering", array(
+            'id' => $id,
+        ));
+    }
+    
+    /**
+    * Lists VPC offerings
+    *
+    * @param string $displayText list VPC offerings by display text
+    * @param string $id list VPC offerings by id
+    * @param string $isDefault true if need to list only default VPC offerings. Defaul
+    *        t value is false
     * @param string $keyword List by keyword
-    * @param string $lbDeviceId f5 load balancer device ID
+    * @param string $name list VPC offerings by name
     * @param string $page 
     * @param string $pageSize 
-    * @param string $physicalNetworkId the Physical Network ID
+    * @param string $state list VPC offerings by state
+    * @param string $supportedServices list VPC offerings supporting certain services
     * @param string $page Pagination
     */
     
-    public function listF5LoadBalancers($keyword = "", $lbDeviceId = "", $page = "", $pageSize = "", $physicalNetworkId = "", $page = "") {
+    public function listVPCOfferings($displayText = "", $id = "", $isDefault = "", $keyword = "", $name = "", $page = "", $pageSize = "", $state = "", $supportedServices = "", $page = "") {
 
-        return $this->request("listF5LoadBalancers", array(
+        return $this->request("listVPCOfferings", array(
+            'displaytext' => $displayText,
+            'id' => $id,
+            'isdefault' => $isDefault,
             'keyword' => $keyword,
-            'lbdeviceid' => $lbDeviceId,
+            'name' => $name,
             'page' => $page,
             'pagesize' => $pageSize,
-            'physicalnetworkid' => $physicalNetworkId,
+            'state' => $state,
+            'supportedservices' => $supportedServices,
             'page' => $page,
         ));
     }
     
     /**
-    * Adds a netscaler load balancer device
+    * Creates a private gateway
     *
-    * @param string $networkDeviceType Netscaler device type supports NetscalerMPXLoad
-    *        Balancer, NetscalerVPXLoadBalancer, NetscalerSDXLoadBalancer
-    * @param string $password Credentials to reach netscaler load balancer device
-    * @param string $physicalNetworkId the Physical Network ID
-    * @param string $url URL of the netscaler load balancer appliance.
-    * @param string $userName Credentials to reach netscaler load balancer device
+    * @param string $gateway the gateway of the Private gateway
+    * @param string $ipAddress the IP address of the Private gateaway
+    * @param string $netmask the netmask of the Private gateway
+    * @param string $vlan the Vlan for the private gateway
+    * @param string $vpcId the VPC network belongs to
+    * @param string $physicalNetworkId the Physical Network ID the network belongs to
     */
     
-    public function addNetscalerLoadBalancer($networkDeviceType, $password, $physicalNetworkId, $url, $userName) {
+    public function createPrivateGateway($gateway, $ipAddress, $netmask, $vlan, $vpcId, $physicalNetworkId = "") {
 
-        if (empty($networkDeviceType)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "networkDeviceType"), MISSING_ARGUMENT);
+        if (empty($gateway)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "gateway"), MISSING_ARGUMENT);
         }
 
-        if (empty($password)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "password"), MISSING_ARGUMENT);
+        if (empty($ipAddress)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "ipAddress"), MISSING_ARGUMENT);
         }
 
-        if (empty($physicalNetworkId)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "physicalNetworkId"), MISSING_ARGUMENT);
+        if (empty($netmask)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "netmask"), MISSING_ARGUMENT);
         }
 
-        if (empty($url)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "url"), MISSING_ARGUMENT);
+        if (empty($vlan)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "vlan"), MISSING_ARGUMENT);
         }
 
-        if (empty($userName)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "userName"), MISSING_ARGUMENT);
+        if (empty($vpcId)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "vpcId"), MISSING_ARGUMENT);
         }
 
-        return $this->request("addNetscalerLoadBalancer", array(
-            'networkdevicetype' => $networkDeviceType,
-            'password' => $password,
+        return $this->request("createPrivateGateway", array(
+            'gateway' => $gateway,
+            'ipaddress' => $ipAddress,
+            'netmask' => $netmask,
+            'vlan' => $vlan,
+            'vpcid' => $vpcId,
             'physicalnetworkid' => $physicalNetworkId,
-            'url' => $url,
-            'username' => $userName,
         ));
     }
     
     /**
-    * delete a netscaler load balancer device
+    * List private gateways
     *
-    * @param string $lbDeviceId netscaler load balancer device ID
-    */
-    
-    public function deleteNetscalerLoadBalancer($lbDeviceId) {
-
-        if (empty($lbDeviceId)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "lbDeviceId"), MISSING_ARGUMENT);
-        }
-
-        return $this->request("deleteNetscalerLoadBalancer", array(
-            'lbdeviceid' => $lbDeviceId,
-        ));
-    }
-    
-    /**
-    * configures a netscaler load balancer device
-    *
-    * @param string $lbDeviceId Netscaler load balancer device ID
-    * @param string $inline true if netscaler load balancer is intended to be used in 
-    *        in-line with firewall, false if netscaler load balancer will side-by-side with f
-    *        irewall
-    * @param string $lbDeviceCapacity capacity of the device, Capacity will be interpr
-    *        eted as number of networks device can handle
-    * @param string $lbDeviceDedicated true if this netscaler device to dedicated for 
-    *        a account, false if the netscaler device will be shared by multiple accounts
-    */
-    
-    public function configureNetscalerLoadBalancer($lbDeviceId, $inline = "", $lbDeviceCapacity = "", $lbDeviceDedicated = "") {
-
-        if (empty($lbDeviceId)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "lbDeviceId"), MISSING_ARGUMENT);
-        }
-
-        return $this->request("configureNetscalerLoadBalancer", array(
-            'lbdeviceid' => $lbDeviceId,
-            'inline' => $inline,
-            'lbdevicecapacity' => $lbDeviceCapacity,
-            'lbdevicededicated' => $lbDeviceDedicated,
-        ));
-    }
-    
-    /**
-    * lists netscaler load balancer devices
-    *
+    * @param string $account List resources by account. Must be used with the domainId
+    *         parameter.
+    * @param string $domainId list only resources belonging to the domain specified
+    * @param string $id list private gateway by id
+    * @param string $ipAddress list gateways by ip address
+    * @param string $isRecursive defaults to false, but if true, lists all resources f
+    *        rom the parent specified by the domainId till leaves.
     * @param string $keyword List by keyword
-    * @param string $lbDeviceId netscaler load balancer device ID
+    * @param string $listAll If set to false, list only resources belonging to the com
+    *        mand&#039;s caller; if set to true - list resources that the caller is authorize
+    *        d to see. Default value is false
     * @param string $page 
     * @param string $pageSize 
-    * @param string $physicalNetworkId the Physical Network ID
+    * @param string $projectId list objects by project
+    * @param string $state list gateways by state
+    * @param string $vlan list gateways by vlan
+    * @param string $vpcId list gateways by vpc
     * @param string $page Pagination
     */
     
-    public function listNetscalerLoadBalancers($keyword = "", $lbDeviceId = "", $page = "", $pageSize = "", $physicalNetworkId = "", $page = "") {
+    public function listPrivateGateways($account = "", $domainId = "", $id = "", $ipAddress = "", $isRecursive = "", $keyword = "", $listAll = "", $page = "", $pageSize = "", $projectId = "", $state = "", $vlan = "", $vpcId = "", $page = "") {
 
-        return $this->request("listNetscalerLoadBalancers", array(
+        return $this->request("listPrivateGateways", array(
+            'account' => $account,
+            'domainid' => $domainId,
+            'id' => $id,
+            'ipaddress' => $ipAddress,
+            'isrecursive' => $isRecursive,
             'keyword' => $keyword,
-            'lbdeviceid' => $lbDeviceId,
+            'listall' => $listAll,
             'page' => $page,
             'pagesize' => $pageSize,
-            'physicalnetworkid' => $physicalNetworkId,
+            'projectid' => $projectId,
+            'state' => $state,
+            'vlan' => $vlan,
+            'vpcid' => $vpcId,
+            'page' => $page,
+        ));
+    }
+    
+    /**
+    * Deletes a Private gateway
+    *
+    * @param string $id the ID of the private gateway
+    */
+    
+    public function deletePrivateGateway($id) {
+
+        if (empty($id)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
+        }
+
+        return $this->request("deletePrivateGateway", array(
+            'id' => $id,
+        ));
+    }
+    
+    /**
+    * Creates a static route
+    *
+    * @param string $cidr static route cidr
+    * @param string $gatewayid the gateway id we are creating static route for
+    */
+    
+    public function createStaticRoute($cidr, $gatewayid) {
+
+        if (empty($cidr)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "cidr"), MISSING_ARGUMENT);
+        }
+
+        if (empty($gatewayid)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "gatewayid"), MISSING_ARGUMENT);
+        }
+
+        return $this->request("createStaticRoute", array(
+            'cidr' => $cidr,
+            'gatewayid' => $gatewayid,
+        ));
+    }
+    
+    /**
+    * Deletes a static route
+    *
+    * @param string $id the ID of the static route
+    */
+    
+    public function deleteStaticRoute($id) {
+
+        if (empty($id)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
+        }
+
+        return $this->request("deleteStaticRoute", array(
+            'id' => $id,
+        ));
+    }
+    
+    /**
+    * Lists all static routes
+    *
+    * @param string $account List resources by account. Must be used with the domainId
+    *         parameter.
+    * @param string $domainId list only resources belonging to the domain specified
+    * @param string $gatewayid list static routes by gateway id
+    * @param string $id list static route by id
+    * @param string $isRecursive defaults to false, but if true, lists all resources f
+    *        rom the parent specified by the domainId till leaves.
+    * @param string $keyword List by keyword
+    * @param string $listAll If set to false, list only resources belonging to the com
+    *        mand&#039;s caller; if set to true - list resources that the caller is authorize
+    *        d to see. Default value is false
+    * @param string $page 
+    * @param string $pageSize 
+    * @param string $projectId list objects by project
+    * @param string $tags List resources by tags (key/value pairs)
+    * @param string $vpcId list static routes by vpc id
+    * @param string $page Pagination
+    */
+    
+    public function listStaticRoutes($account = "", $domainId = "", $gatewayid = "", $id = "", $isRecursive = "", $keyword = "", $listAll = "", $page = "", $pageSize = "", $projectId = "", $tags = "", $vpcId = "", $page = "") {
+
+        return $this->request("listStaticRoutes", array(
+            'account' => $account,
+            'domainid' => $domainId,
+            'gatewayid' => $gatewayid,
+            'id' => $id,
+            'isrecursive' => $isRecursive,
+            'keyword' => $keyword,
+            'listall' => $listAll,
+            'page' => $page,
+            'pagesize' => $pageSize,
+            'projectid' => $projectId,
+            'tags' => $tags,
+            'vpcid' => $vpcId,
             'page' => $page,
         ));
     }
@@ -1381,13 +1353,15 @@ class CloudStackClient extends BaseCloudStackClient {
     *        tygroupids parameter
     * @param string $size the arbitrary size for the DATADISK volume. Mutually exclusi
     *        ve with diskOfferingId
+    * @param string $startvm true if network offering supports specifying ip ranges; d
+    *        efaulted to true if not specified
     * @param string $userData an optional binary data that can be sent to the virtual 
     *        machine upon a successful deployment. This binary data must be base64 encoded be
     *        fore adding it to the request. Currently only HTTP GET is supported. Using HTTP 
     *        GET (via querystring), you can send up to 2KB of data after base64 encoding.
     */
     
-    public function deployVirtualMachine($serviceOfferingId, $templateId, $zoneId, $account = "", $diskOfferingId = "", $displayName = "", $domainId = "", $group = "", $hostId = "", $hypervisor = "", $ipAddress = "", $ipToNetworkList = "", $keyboard = "", $keyPair = "", $name = "", $networkIds = "", $projectId = "", $securityGroupIds = "", $securityGroupNames = "", $size = "", $userData = "") {
+    public function deployVirtualMachine($serviceOfferingId, $templateId, $zoneId, $account = "", $diskOfferingId = "", $displayName = "", $domainId = "", $group = "", $hostId = "", $hypervisor = "", $ipAddress = "", $ipToNetworkList = "", $keyboard = "", $keyPair = "", $name = "", $networkIds = "", $projectId = "", $securityGroupIds = "", $securityGroupNames = "", $size = "", $startvm = "", $userData = "") {
 
         if (empty($serviceOfferingId)) {
             throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "serviceOfferingId"), MISSING_ARGUMENT);
@@ -1422,6 +1396,7 @@ class CloudStackClient extends BaseCloudStackClient {
             'securitygroupids' => $securityGroupIds,
             'securitygroupnames' => $securityGroupNames,
             'size' => $size,
+            'startvm' => $startvm,
             'userdata' => $userData,
         ));
     }
@@ -1464,9 +1439,11 @@ class CloudStackClient extends BaseCloudStackClient {
     * Starts a virtual machine.
     *
     * @param string $id The ID of the virtual machine
+    * @param string $hostId destination Host ID to deploy the VM to - parameter availa
+    *        ble for root admin only
     */
     
-    public function startVirtualMachine($id) {
+    public function startVirtualMachine($id, $hostId = "") {
 
         if (empty($id)) {
             throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
@@ -1474,6 +1451,7 @@ class CloudStackClient extends BaseCloudStackClient {
 
         return $this->request("startVirtualMachine", array(
             'id' => $id,
+            'hostid' => $hostId,
         ));
     }
     
@@ -1481,7 +1459,8 @@ class CloudStackClient extends BaseCloudStackClient {
     * Stops a virtual machine.
     *
     * @param string $id The ID of the virtual machine
-    * @param string $forced Force stop the VM.  The caller knows the VM is stopped.
+    * @param string $forced Force stop the VM (vm is marked as Stopped even when comma
+    *        nd fails to be send to the backend).  The caller knows the VM is stopped.
     */
     
     public function stopVirtualMachine($id, $forced = "") {
@@ -1538,7 +1517,7 @@ class CloudStackClient extends BaseCloudStackClient {
     }
     
     /**
-    * Updates parameters of a virtual machine.
+    * Updates properties of a virtual machine. The VM has to be stopped and restarted for the new properties to take effect. UpdateVirtualMachine does not first check whether the VM is stopped. Therefore, stop the VM manually before issuing this call.
     *
     * @param string $id The ID of the virtual machine
     * @param string $displayName user generated name
@@ -1600,6 +1579,7 @@ class CloudStackClient extends BaseCloudStackClient {
     * @param string $hostId the host ID
     * @param string $hypervisor the target hypervisor for the template
     * @param string $id the ID of the virtual machine
+    * @param string $isoid list vms by iso
     * @param string $isRecursive defaults to false, but if true, lists all resources f
     *        rom the parent specified by the domainId till leaves.
     * @param string $keyword List by keyword
@@ -1611,14 +1591,17 @@ class CloudStackClient extends BaseCloudStackClient {
     * @param string $page 
     * @param string $pageSize 
     * @param string $podId the pod ID
-    * @param string $projectId list firewall rules by project
+    * @param string $projectId list objects by project
     * @param string $state state of the virtual machine
     * @param string $storageId the storage ID where vm&#039;s volumes belong to
+    * @param string $tags List resources by tags (key/value pairs)
+    * @param string $templateId list vms by template
+    * @param string $vpcId list vms by vpc
     * @param string $zoneId the availability zone ID
     * @param string $page Pagination
     */
     
-    public function listVirtualMachines($account = "", $details = "", $domainId = "", $forVirtualNetwork = "", $groupId = "", $hostId = "", $hypervisor = "", $id = "", $isRecursive = "", $keyword = "", $listAll = "", $name = "", $networkId = "", $page = "", $pageSize = "", $podId = "", $projectId = "", $state = "", $storageId = "", $zoneId = "", $page = "") {
+    public function listVirtualMachines($account = "", $details = "", $domainId = "", $forVirtualNetwork = "", $groupId = "", $hostId = "", $hypervisor = "", $id = "", $isoid = "", $isRecursive = "", $keyword = "", $listAll = "", $name = "", $networkId = "", $page = "", $pageSize = "", $podId = "", $projectId = "", $state = "", $storageId = "", $tags = "", $templateId = "", $vpcId = "", $zoneId = "", $page = "") {
 
         return $this->request("listVirtualMachines", array(
             'account' => $account,
@@ -1629,6 +1612,7 @@ class CloudStackClient extends BaseCloudStackClient {
             'hostid' => $hostId,
             'hypervisor' => $hypervisor,
             'id' => $id,
+            'isoid' => $isoid,
             'isrecursive' => $isRecursive,
             'keyword' => $keyword,
             'listall' => $listAll,
@@ -1640,6 +1624,9 @@ class CloudStackClient extends BaseCloudStackClient {
             'projectid' => $projectId,
             'state' => $state,
             'storageid' => $storageId,
+            'tags' => $tags,
+            'templateid' => $templateId,
+            'vpcid' => $vpcId,
             'zoneid' => $zoneId,
             'page' => $page,
         ));
@@ -1735,6 +1722,437 @@ class CloudStackClient extends BaseCloudStackClient {
 
         return $this->request("restoreVirtualMachine", array(
             'virtualmachineid' => $virtualMachineId,
+        ));
+    }
+    
+    /**
+    * Creates a l2tp/ipsec remote access vpn
+    *
+    * @param string $publicIpId public ip address id of the vpn server
+    * @param string $account an optional account for the VPN. Must be used with domain
+    *        Id.
+    * @param string $domainId an optional domainId for the VPN. If the account paramet
+    *        er is used, domainId must also be used.
+    * @param string $ipRange the range of ip addresses to allocate to vpn clients. The
+    *         first ip in the range will be taken by the vpn server
+    * @param string $openFirewall if true, firewall rule for source/end pubic port is 
+    *        automatically created; if false - firewall rule has to be created explicitely. H
+    *        as value true by default
+    */
+    
+    public function createRemoteAccessVpn($publicIpId, $account = "", $domainId = "", $ipRange = "", $openFirewall = "") {
+
+        if (empty($publicIpId)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "publicIpId"), MISSING_ARGUMENT);
+        }
+
+        return $this->request("createRemoteAccessVpn", array(
+            'publicipid' => $publicIpId,
+            'account' => $account,
+            'domainid' => $domainId,
+            'iprange' => $ipRange,
+            'openfirewall' => $openFirewall,
+        ));
+    }
+    
+    /**
+    * Destroys a l2tp/ipsec remote access vpn
+    *
+    * @param string $publicIpId public ip address id of the vpn server
+    */
+    
+    public function deleteRemoteAccessVpn($publicIpId) {
+
+        if (empty($publicIpId)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "publicIpId"), MISSING_ARGUMENT);
+        }
+
+        return $this->request("deleteRemoteAccessVpn", array(
+            'publicipid' => $publicIpId,
+        ));
+    }
+    
+    /**
+    * Lists remote access vpns
+    *
+    * @param string $publicIpId public ip address id of the vpn server
+    * @param string $account List resources by account. Must be used with the domainId
+    *         parameter.
+    * @param string $domainId list only resources belonging to the domain specified
+    * @param string $isRecursive defaults to false, but if true, lists all resources f
+    *        rom the parent specified by the domainId till leaves.
+    * @param string $keyword List by keyword
+    * @param string $listAll If set to false, list only resources belonging to the com
+    *        mand&#039;s caller; if set to true - list resources that the caller is authorize
+    *        d to see. Default value is false
+    * @param string $page 
+    * @param string $pageSize 
+    * @param string $projectId list objects by project
+    * @param string $page Pagination
+    */
+    
+    public function listRemoteAccessVpns($publicIpId, $account = "", $domainId = "", $isRecursive = "", $keyword = "", $listAll = "", $page = "", $pageSize = "", $projectId = "", $page = "") {
+
+        if (empty($publicIpId)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "publicIpId"), MISSING_ARGUMENT);
+        }
+
+        return $this->request("listRemoteAccessVpns", array(
+            'publicipid' => $publicIpId,
+            'account' => $account,
+            'domainid' => $domainId,
+            'isrecursive' => $isRecursive,
+            'keyword' => $keyword,
+            'listall' => $listAll,
+            'page' => $page,
+            'pagesize' => $pageSize,
+            'projectid' => $projectId,
+            'page' => $page,
+        ));
+    }
+    
+    /**
+    * Creates site to site vpn customer gateway
+    *
+    * @param string $cidrList guest cidr list of the customer gateway
+    * @param string $espPolicy ESP policy of the customer gateway
+    * @param string $gateway public ip address id of the customer gateway
+    * @param string $ikePolicy IKE policy of the customer gateway
+    * @param string $ipSecpsk IPsec Preshared-Key of the customer gateway
+    * @param string $account the account associated with the gateway. Must be used wit
+    *        h the domainId parameter.
+    * @param string $domainId the domain ID associated with the gateway. If used with 
+    *        the account parameter returns the gateway associated with the account for the sp
+    *        ecified domain.
+    * @param string $dpd If DPD is enabled for VPN connection
+    * @param string $espLifetime Lifetime of phase 2 VPN connection to the customer ga
+    *        teway, in seconds
+    * @param string $ikeLifetime Lifetime of phase 1 VPN connection to the customer ga
+    *        teway, in seconds
+    * @param string $name name of this customer gateway
+    */
+    
+    public function createVpnCustomerGateway($cidrList, $espPolicy, $gateway, $ikePolicy, $ipSecpsk, $account = "", $domainId = "", $dpd = "", $espLifetime = "", $ikeLifetime = "", $name = "") {
+
+        if (empty($cidrList)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "cidrList"), MISSING_ARGUMENT);
+        }
+
+        if (empty($espPolicy)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "espPolicy"), MISSING_ARGUMENT);
+        }
+
+        if (empty($gateway)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "gateway"), MISSING_ARGUMENT);
+        }
+
+        if (empty($ikePolicy)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "ikePolicy"), MISSING_ARGUMENT);
+        }
+
+        if (empty($ipSecpsk)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "ipSecpsk"), MISSING_ARGUMENT);
+        }
+
+        return $this->request("createVpnCustomerGateway", array(
+            'cidrlist' => $cidrList,
+            'esppolicy' => $espPolicy,
+            'gateway' => $gateway,
+            'ikepolicy' => $ikePolicy,
+            'ipsecpsk' => $ipSecpsk,
+            'account' => $account,
+            'domainid' => $domainId,
+            'dpd' => $dpd,
+            'esplifetime' => $espLifetime,
+            'ikelifetime' => $ikeLifetime,
+            'name' => $name,
+        ));
+    }
+    
+    /**
+    * Creates site to site vpn local gateway
+    *
+    * @param string $vpcId public ip address id of the vpn gateway
+    */
+    
+    public function createVpnGateway($vpcId) {
+
+        if (empty($vpcId)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "vpcId"), MISSING_ARGUMENT);
+        }
+
+        return $this->request("createVpnGateway", array(
+            'vpcid' => $vpcId,
+        ));
+    }
+    
+    /**
+    * Create site to site vpn connection
+    *
+    * @param string $s2scustomergatewayid id of the customer gateway
+    * @param string $s2svpngatewayid id of the vpn gateway
+    */
+    
+    public function createVpnConnection($s2scustomergatewayid, $s2svpngatewayid) {
+
+        if (empty($s2scustomergatewayid)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "s2scustomergatewayid"), MISSING_ARGUMENT);
+        }
+
+        if (empty($s2svpngatewayid)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "s2svpngatewayid"), MISSING_ARGUMENT);
+        }
+
+        return $this->request("createVpnConnection", array(
+            's2scustomergatewayid' => $s2scustomergatewayid,
+            's2svpngatewayid' => $s2svpngatewayid,
+        ));
+    }
+    
+    /**
+    * Delete site to site vpn customer gateway
+    *
+    * @param string $id id of customer gateway
+    */
+    
+    public function deleteVpnCustomerGateway($id) {
+
+        if (empty($id)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
+        }
+
+        return $this->request("deleteVpnCustomerGateway", array(
+            'id' => $id,
+        ));
+    }
+    
+    /**
+    * Delete site to site vpn gateway
+    *
+    * @param string $id id of customer gateway
+    */
+    
+    public function deleteVpnGateway($id) {
+
+        if (empty($id)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
+        }
+
+        return $this->request("deleteVpnGateway", array(
+            'id' => $id,
+        ));
+    }
+    
+    /**
+    * Delete site to site vpn connection
+    *
+    * @param string $id id of vpn connection
+    */
+    
+    public function deleteVpnConnection($id) {
+
+        if (empty($id)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
+        }
+
+        return $this->request("deleteVpnConnection", array(
+            'id' => $id,
+        ));
+    }
+    
+    /**
+    * Update site to site vpn customer gateway
+    *
+    * @param string $id id of customer gateway
+    * @param string $cidrList guest cidr of the customer gateway
+    * @param string $espPolicy ESP policy of the customer gateway
+    * @param string $gateway public ip address id of the customer gateway
+    * @param string $ikePolicy IKE policy of the customer gateway
+    * @param string $ipSecpsk IPsec Preshared-Key of the customer gateway
+    * @param string $account the account associated with the gateway. Must be used wit
+    *        h the domainId parameter.
+    * @param string $domainId the domain ID associated with the gateway. If used with 
+    *        the account parameter returns the gateway associated with the account for the sp
+    *        ecified domain.
+    * @param string $dpd If DPD is enabled for VPN connection
+    * @param string $espLifetime Lifetime of phase 2 VPN connection to the customer ga
+    *        teway, in seconds
+    * @param string $ikeLifetime Lifetime of phase 1 VPN connection to the customer ga
+    *        teway, in seconds
+    * @param string $name name of this customer gateway
+    */
+    
+    public function updateVpnCustomerGateway($id, $cidrList, $espPolicy, $gateway, $ikePolicy, $ipSecpsk, $account = "", $domainId = "", $dpd = "", $espLifetime = "", $ikeLifetime = "", $name = "") {
+
+        if (empty($id)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
+        }
+
+        if (empty($cidrList)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "cidrList"), MISSING_ARGUMENT);
+        }
+
+        if (empty($espPolicy)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "espPolicy"), MISSING_ARGUMENT);
+        }
+
+        if (empty($gateway)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "gateway"), MISSING_ARGUMENT);
+        }
+
+        if (empty($ikePolicy)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "ikePolicy"), MISSING_ARGUMENT);
+        }
+
+        if (empty($ipSecpsk)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "ipSecpsk"), MISSING_ARGUMENT);
+        }
+
+        return $this->request("updateVpnCustomerGateway", array(
+            'id' => $id,
+            'cidrlist' => $cidrList,
+            'esppolicy' => $espPolicy,
+            'gateway' => $gateway,
+            'ikepolicy' => $ikePolicy,
+            'ipsecpsk' => $ipSecpsk,
+            'account' => $account,
+            'domainid' => $domainId,
+            'dpd' => $dpd,
+            'esplifetime' => $espLifetime,
+            'ikelifetime' => $ikeLifetime,
+            'name' => $name,
+        ));
+    }
+    
+    /**
+    * Reset site to site vpn connection
+    *
+    * @param string $id id of vpn connection
+    * @param string $account an optional account for connection. Must be used with dom
+    *        ainId.
+    * @param string $domainId an optional domainId for connection. If the account para
+    *        meter is used, domainId must also be used.
+    */
+    
+    public function resetVpnConnection($id, $account = "", $domainId = "") {
+
+        if (empty($id)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
+        }
+
+        return $this->request("resetVpnConnection", array(
+            'id' => $id,
+            'account' => $account,
+            'domainid' => $domainId,
+        ));
+    }
+    
+    /**
+    * Lists site to site vpn customer gateways
+    *
+    * @param string $account List resources by account. Must be used with the domainId
+    *         parameter.
+    * @param string $domainId list only resources belonging to the domain specified
+    * @param string $id id of the customer gateway
+    * @param string $isRecursive defaults to false, but if true, lists all resources f
+    *        rom the parent specified by the domainId till leaves.
+    * @param string $keyword List by keyword
+    * @param string $listAll If set to false, list only resources belonging to the com
+    *        mand&#039;s caller; if set to true - list resources that the caller is authorize
+    *        d to see. Default value is false
+    * @param string $page 
+    * @param string $pageSize 
+    * @param string $projectId list objects by project
+    * @param string $page Pagination
+    */
+    
+    public function listVpnCustomerGateways($account = "", $domainId = "", $id = "", $isRecursive = "", $keyword = "", $listAll = "", $page = "", $pageSize = "", $projectId = "", $page = "") {
+
+        return $this->request("listVpnCustomerGateways", array(
+            'account' => $account,
+            'domainid' => $domainId,
+            'id' => $id,
+            'isrecursive' => $isRecursive,
+            'keyword' => $keyword,
+            'listall' => $listAll,
+            'page' => $page,
+            'pagesize' => $pageSize,
+            'projectid' => $projectId,
+            'page' => $page,
+        ));
+    }
+    
+    /**
+    * Lists site 2 site vpn gateways
+    *
+    * @param string $account List resources by account. Must be used with the domainId
+    *         parameter.
+    * @param string $domainId list only resources belonging to the domain specified
+    * @param string $id id of the vpn gateway
+    * @param string $isRecursive defaults to false, but if true, lists all resources f
+    *        rom the parent specified by the domainId till leaves.
+    * @param string $keyword List by keyword
+    * @param string $listAll If set to false, list only resources belonging to the com
+    *        mand&#039;s caller; if set to true - list resources that the caller is authorize
+    *        d to see. Default value is false
+    * @param string $page 
+    * @param string $pageSize 
+    * @param string $projectId list objects by project
+    * @param string $vpcId id of vpc
+    * @param string $page Pagination
+    */
+    
+    public function listVpnGateways($account = "", $domainId = "", $id = "", $isRecursive = "", $keyword = "", $listAll = "", $page = "", $pageSize = "", $projectId = "", $vpcId = "", $page = "") {
+
+        return $this->request("listVpnGateways", array(
+            'account' => $account,
+            'domainid' => $domainId,
+            'id' => $id,
+            'isrecursive' => $isRecursive,
+            'keyword' => $keyword,
+            'listall' => $listAll,
+            'page' => $page,
+            'pagesize' => $pageSize,
+            'projectid' => $projectId,
+            'vpcid' => $vpcId,
+            'page' => $page,
+        ));
+    }
+    
+    /**
+    * Lists site to site vpn connection gateways
+    *
+    * @param string $account List resources by account. Must be used with the domainId
+    *         parameter.
+    * @param string $domainId list only resources belonging to the domain specified
+    * @param string $id id of the vpn connection
+    * @param string $isRecursive defaults to false, but if true, lists all resources f
+    *        rom the parent specified by the domainId till leaves.
+    * @param string $keyword List by keyword
+    * @param string $listAll If set to false, list only resources belonging to the com
+    *        mand&#039;s caller; if set to true - list resources that the caller is authorize
+    *        d to see. Default value is false
+    * @param string $page 
+    * @param string $pageSize 
+    * @param string $projectId list objects by project
+    * @param string $vpcId id of vpc
+    * @param string $page Pagination
+    */
+    
+    public function listVpnConnections($account = "", $domainId = "", $id = "", $isRecursive = "", $keyword = "", $listAll = "", $page = "", $pageSize = "", $projectId = "", $vpcId = "", $page = "") {
+
+        return $this->request("listVpnConnections", array(
+            'account' => $account,
+            'domainid' => $domainId,
+            'id' => $id,
+            'isrecursive' => $isRecursive,
+            'keyword' => $keyword,
+            'listall' => $listAll,
+            'page' => $page,
+            'pagesize' => $pageSize,
+            'projectid' => $projectId,
+            'vpcid' => $vpcId,
+            'page' => $page,
         ));
     }
     
@@ -2012,313 +2430,6 @@ class CloudStackClient extends BaseCloudStackClient {
     }
     
     /**
-    * Attaches a disk volume to a virtual machine.
-    *
-    * @param string $id the ID of the disk volume
-    * @param string $virtualMachineId the ID of the virtual machine
-    * @param string $deviceId the ID of the device to map the volume to within the gue
-    *        st OS. If no deviceId is passed in, the next available deviceId will be chosen. 
-    *        Possible values for a Linux OS are:* 1 - /dev/xvdb* 2 - /dev/xvdc* 4 - /dev/xvde
-    *        * 5 - /dev/xvdf* 6 - /dev/xvdg* 7 - /dev/xvdh* 8 - /dev/xvdi* 9 - /dev/xvdj
-    */
-    
-    public function attachVolume($id, $virtualMachineId, $deviceId = "") {
-
-        if (empty($id)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
-        }
-
-        if (empty($virtualMachineId)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "virtualMachineId"), MISSING_ARGUMENT);
-        }
-
-        return $this->request("attachVolume", array(
-            'id' => $id,
-            'virtualmachineid' => $virtualMachineId,
-            'deviceid' => $deviceId,
-        ));
-    }
-    
-    /**
-    * Detaches a disk volume from a virtual machine.
-    *
-    * @param string $deviceId the device ID on the virtual machine where volume is det
-    *        ached from
-    * @param string $id the ID of the disk volume
-    * @param string $virtualMachineId the ID of the virtual machine where the volume i
-    *        s detached from
-    */
-    
-    public function detachVolume($deviceId = "", $id = "", $virtualMachineId = "") {
-
-        return $this->request("detachVolume", array(
-            'deviceid' => $deviceId,
-            'id' => $id,
-            'virtualmachineid' => $virtualMachineId,
-        ));
-    }
-    
-    /**
-    * Creates a disk volume from a disk offering. This disk volume must still be attached to a virtual machine to make use of it.
-    *
-    * @param string $name the name of the disk volume
-    * @param string $account the account associated with the disk volume. Must be used
-    *         with the domainId parameter.
-    * @param string $diskOfferingId the ID of the disk offering. Either diskOfferingId
-    *         or snapshotId must be passed in.
-    * @param string $domainId the domain ID associated with the disk offering. If used
-    *         with the account parameter returns the disk volume associated with the account 
-    *        for the specified domain.
-    * @param string $projectId the project associated with the volume. Mutually exclus
-    *        ive with account parameter
-    * @param string $size Arbitrary volume size
-    * @param string $snapshotId the snapshot ID for the disk volume. Either diskOfferi
-    *        ngId or snapshotId must be passed in.
-    * @param string $zoneId the ID of the availability zone
-    */
-    
-    public function createVolume($name, $account = "", $diskOfferingId = "", $domainId = "", $projectId = "", $size = "", $snapshotId = "", $zoneId = "") {
-
-        if (empty($name)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "name"), MISSING_ARGUMENT);
-        }
-
-        return $this->request("createVolume", array(
-            'name' => $name,
-            'account' => $account,
-            'diskofferingid' => $diskOfferingId,
-            'domainid' => $domainId,
-            'projectid' => $projectId,
-            'size' => $size,
-            'snapshotid' => $snapshotId,
-            'zoneid' => $zoneId,
-        ));
-    }
-    
-    /**
-    * Deletes a detached disk volume.
-    *
-    * @param string $id The ID of the disk volume
-    */
-    
-    public function deleteVolume($id) {
-
-        if (empty($id)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
-        }
-
-        return $this->request("deleteVolume", array(
-            'id' => $id,
-        ));
-    }
-    
-    /**
-    * Lists all volumes.
-    *
-    * @param string $account List resources by account. Must be used with the domainId
-    *         parameter.
-    * @param string $domainId list only resources belonging to the domain specified
-    * @param string $hostId list volumes on specified host
-    * @param string $id the ID of the disk volume
-    * @param string $isRecursive defaults to false, but if true, lists all resources f
-    *        rom the parent specified by the domainId till leaves.
-    * @param string $keyword List by keyword
-    * @param string $listAll If set to false, list only resources belonging to the com
-    *        mand&#039;s caller; if set to true - list resources that the caller is authorize
-    *        d to see. Default value is false
-    * @param string $name the name of the disk volume
-    * @param string $page 
-    * @param string $pageSize 
-    * @param string $podId the pod id the disk volume belongs to
-    * @param string $projectId list firewall rules by project
-    * @param string $type the type of disk volume
-    * @param string $virtualMachineId the ID of the virtual machine
-    * @param string $zoneId the ID of the availability zone
-    * @param string $page Pagination
-    */
-    
-    public function listVolumes($account = "", $domainId = "", $hostId = "", $id = "", $isRecursive = "", $keyword = "", $listAll = "", $name = "", $page = "", $pageSize = "", $podId = "", $projectId = "", $type = "", $virtualMachineId = "", $zoneId = "", $page = "") {
-
-        return $this->request("listVolumes", array(
-            'account' => $account,
-            'domainid' => $domainId,
-            'hostid' => $hostId,
-            'id' => $id,
-            'isrecursive' => $isRecursive,
-            'keyword' => $keyword,
-            'listall' => $listAll,
-            'name' => $name,
-            'page' => $page,
-            'pagesize' => $pageSize,
-            'podid' => $podId,
-            'projectid' => $projectId,
-            'type' => $type,
-            'virtualmachineid' => $virtualMachineId,
-            'zoneid' => $zoneId,
-            'page' => $page,
-        ));
-    }
-    
-    /**
-    * Extracts volume
-    *
-    * @param string $id the ID of the volume
-    * @param string $mode the mode of extraction - HTTP_DOWNLOAD or FTP_UPLOAD
-    * @param string $zoneId the ID of the zone where the volume is located
-    * @param string $url the url to which the volume would be extracted
-    */
-    
-    public function extractVolume($id, $mode, $zoneId, $url = "") {
-
-        if (empty($id)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
-        }
-
-        if (empty($mode)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "mode"), MISSING_ARGUMENT);
-        }
-
-        if (empty($zoneId)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "zoneId"), MISSING_ARGUMENT);
-        }
-
-        return $this->request("extractVolume", array(
-            'id' => $id,
-            'mode' => $mode,
-            'zoneid' => $zoneId,
-            'url' => $url,
-        ));
-    }
-    
-    /**
-    * Migrate volume
-    *
-    * @param string $storageId destination storage pool ID to migrate the volume to
-    * @param string $volumeId the ID of the volume
-    */
-    
-    public function migrateVolume($storageId, $volumeId) {
-
-        if (empty($storageId)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "storageId"), MISSING_ARGUMENT);
-        }
-
-        if (empty($volumeId)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "volumeId"), MISSING_ARGUMENT);
-        }
-
-        return $this->request("migrateVolume", array(
-            'storageid' => $storageId,
-            'volumeid' => $volumeId,
-        ));
-    }
-    
-    /**
-    * Create a volume
-    *
-    * @param string $aggregateName aggregate name.
-    * @param string $ipAddress ip address.
-    * @param string $password password.
-    * @param string $poolName pool name.
-    * @param string $size volume size.
-    * @param string $userName user name.
-    * @param string $volumeName volume name.
-    * @param string $snapshotPolicy snapshot policy.
-    * @param string $snapshotReservation snapshot reservation.
-    */
-    
-    public function createVolumeOnFiler($aggregateName, $ipAddress, $password, $poolName, $size, $userName, $volumeName, $snapshotPolicy = "", $snapshotReservation = "") {
-
-        if (empty($aggregateName)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "aggregateName"), MISSING_ARGUMENT);
-        }
-
-        if (empty($ipAddress)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "ipAddress"), MISSING_ARGUMENT);
-        }
-
-        if (empty($password)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "password"), MISSING_ARGUMENT);
-        }
-
-        if (empty($poolName)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "poolName"), MISSING_ARGUMENT);
-        }
-
-        if (empty($size)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "size"), MISSING_ARGUMENT);
-        }
-
-        if (empty($userName)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "userName"), MISSING_ARGUMENT);
-        }
-
-        if (empty($volumeName)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "volumeName"), MISSING_ARGUMENT);
-        }
-
-        return $this->request("createVolumeOnFiler", array(
-            'aggregatename' => $aggregateName,
-            'ipaddress' => $ipAddress,
-            'password' => $password,
-            'poolname' => $poolName,
-            'size' => $size,
-            'username' => $userName,
-            'volumename' => $volumeName,
-            'snapshotpolicy' => $snapshotPolicy,
-            'snapshotreservation' => $snapshotReservation,
-        ));
-    }
-    
-    /**
-    * Destroy a Volume
-    *
-    * @param string $aggregateName aggregate name.
-    * @param string $ipAddress ip address.
-    * @param string $volumeName volume name.
-    */
-    
-    public function destroyVolumeOnFiler($aggregateName, $ipAddress, $volumeName) {
-
-        if (empty($aggregateName)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "aggregateName"), MISSING_ARGUMENT);
-        }
-
-        if (empty($ipAddress)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "ipAddress"), MISSING_ARGUMENT);
-        }
-
-        if (empty($volumeName)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "volumeName"), MISSING_ARGUMENT);
-        }
-
-        return $this->request("destroyVolumeOnFiler", array(
-            'aggregatename' => $aggregateName,
-            'ipaddress' => $ipAddress,
-            'volumename' => $volumeName,
-        ));
-    }
-    
-    /**
-    * List Volumes
-    *
-    * @param string $poolName pool name.
-    * @param string $page Pagination
-    */
-    
-    public function listVolumesOnFiler($poolName, $page = "") {
-
-        if (empty($poolName)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "poolName"), MISSING_ARGUMENT);
-        }
-
-        return $this->request("listVolumesOnFiler", array(
-            'poolname' => $poolName,
-            'page' => $page,
-        ));
-    }
-    
-    /**
     * Creates a user for an account that already exists
     *
     * @param string $account Creates the user under the specified account. If no accou
@@ -2504,19 +2615,19 @@ class CloudStackClient extends BaseCloudStackClient {
     }
     
     /**
-    * This command allows a user to register for the developer API, returning a secret key and an API key. This request is made through the integration API port, so it is a privileged command and must be made on behalf of a user. It is up to the implementer just how the username and password are entered, and then how that translates to an integration API request. Both secret key and API key should be returned to the user
+    * Find user account by API key
     *
-    * @param string $id User id
+    * @param string $userApiKey API key of the user
     */
     
-    public function registerUserKeys($id) {
+    public function getUser($userApiKey) {
 
-        if (empty($id)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
+        if (empty($userApiKey)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "userApiKey"), MISSING_ARGUMENT);
         }
 
-        return $this->request("registerUserKeys", array(
-            'id' => $id,
+        return $this->request("getUser", array(
+            'userapikey' => $userApiKey,
         ));
     }
     
@@ -2591,7 +2702,7 @@ class CloudStackClient extends BaseCloudStackClient {
     *        d to see. Default value is false
     * @param string $page 
     * @param string $pageSize 
-    * @param string $projectId list firewall rules by project
+    * @param string $projectId list objects by project
     * @param string $userName the username of the vpn user.
     * @param string $page Pagination
     */
@@ -2610,6 +2721,308 @@ class CloudStackClient extends BaseCloudStackClient {
             'projectid' => $projectId,
             'username' => $userName,
             'page' => $page,
+        ));
+    }
+    
+    /**
+    * Creates a load balancer rule
+    *
+    * @param string $algorithm load balancer algorithm (source, roundrobin, leastconn)
+    *        
+    * @param string $name name of the load balancer rule
+    * @param string $privatePort the private port of the private ip address/virtual ma
+    *        chine where the network traffic will be load balanced to
+    * @param string $publicPort the public port from where the network traffic will be
+    *         load balanced from
+    * @param string $account the account associated with the load balancer. Must be us
+    *        ed with the domainId parameter.
+    * @param string $cidrList the cidr list to forward traffic from
+    * @param string $description the description of the load balancer rule
+    * @param string $domainId the domain ID associated with the load balancer
+    * @param string $networkId The guest network this rule will be created for. Requir
+    *        ed when public Ip address is not associated with any Guest network yet (VPC case
+    *        )
+    * @param string $openFirewall if true, firewall rule for source/end pubic port is 
+    *        automatically created; if false - firewall rule has to be created explicitely. I
+    *        f not specified 1) defaulted to false when LB rule is being created for VPC gues
+    *        t network 2) in all other cases defaulted to true
+    * @param string $publicIpId public ip address id from where the network traffic wi
+    *        ll be load balanced from
+    * @param string $zoneId zone where the load balancer is going to be created. This 
+    *        parameter is required when LB service provider is ElasticLoadBalancerVm
+    */
+    
+    public function createLoadBalancerRule($algorithm, $name, $privatePort, $publicPort, $account = "", $cidrList = "", $description = "", $domainId = "", $networkId = "", $openFirewall = "", $publicIpId = "", $zoneId = "") {
+
+        if (empty($algorithm)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "algorithm"), MISSING_ARGUMENT);
+        }
+
+        if (empty($name)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "name"), MISSING_ARGUMENT);
+        }
+
+        if (empty($privatePort)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "privatePort"), MISSING_ARGUMENT);
+        }
+
+        if (empty($publicPort)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "publicPort"), MISSING_ARGUMENT);
+        }
+
+        return $this->request("createLoadBalancerRule", array(
+            'algorithm' => $algorithm,
+            'name' => $name,
+            'privateport' => $privatePort,
+            'publicport' => $publicPort,
+            'account' => $account,
+            'cidrlist' => $cidrList,
+            'description' => $description,
+            'domainid' => $domainId,
+            'networkid' => $networkId,
+            'openfirewall' => $openFirewall,
+            'publicipid' => $publicIpId,
+            'zoneid' => $zoneId,
+        ));
+    }
+    
+    /**
+    * Deletes a load balancer rule.
+    *
+    * @param string $id the ID of the load balancer rule
+    */
+    
+    public function deleteLoadBalancerRule($id) {
+
+        if (empty($id)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
+        }
+
+        return $this->request("deleteLoadBalancerRule", array(
+            'id' => $id,
+        ));
+    }
+    
+    /**
+    * Removes a virtual machine or a list of virtual machines from a load balancer rule.
+    *
+    * @param string $id The ID of the load balancer rule
+    * @param string $virtualMachineIds the list of IDs of the virtual machines that ar
+    *        e being removed from the load balancer rule (i.e. virtualMachineIds=1,2,3)
+    */
+    
+    public function removeFromLoadBalancerRule($id, $virtualMachineIds) {
+
+        if (empty($id)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
+        }
+
+        if (empty($virtualMachineIds)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "virtualMachineIds"), MISSING_ARGUMENT);
+        }
+
+        return $this->request("removeFromLoadBalancerRule", array(
+            'id' => $id,
+            'virtualmachineids' => $virtualMachineIds,
+        ));
+    }
+    
+    /**
+    * Assigns virtual machine or a list of virtual machines to a load balancer rule.
+    *
+    * @param string $id the ID of the load balancer rule
+    * @param string $virtualMachineIds the list of IDs of the virtual machine that are
+    *         being assigned to the load balancer rule(i.e. virtualMachineIds=1,2,3)
+    */
+    
+    public function assignToLoadBalancerRule($id, $virtualMachineIds) {
+
+        if (empty($id)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
+        }
+
+        if (empty($virtualMachineIds)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "virtualMachineIds"), MISSING_ARGUMENT);
+        }
+
+        return $this->request("assignToLoadBalancerRule", array(
+            'id' => $id,
+            'virtualmachineids' => $virtualMachineIds,
+        ));
+    }
+    
+    /**
+    * Creates a Load Balancer stickiness policy
+    *
+    * @param string $lbRuleId the ID of the load balancer rule
+    * @param string $methodName name of the LB Stickiness policy method, possible valu
+    *        es can be obtained from ListNetworks API
+    * @param string $name name of the LB Stickiness policy
+    * @param string $description the description of the LB Stickiness policy
+    * @param string $param param list. Example: param[0].name=cookiename&amp;amp;param
+    *        [0].value=LBCookie
+    */
+    
+    public function createLBStickinessPolicy($lbRuleId, $methodName, $name, $description = "", $param = "") {
+
+        if (empty($lbRuleId)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "lbRuleId"), MISSING_ARGUMENT);
+        }
+
+        if (empty($methodName)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "methodName"), MISSING_ARGUMENT);
+        }
+
+        if (empty($name)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "name"), MISSING_ARGUMENT);
+        }
+
+        return $this->request("createLBStickinessPolicy", array(
+            'lbruleid' => $lbRuleId,
+            'methodname' => $methodName,
+            'name' => $name,
+            'description' => $description,
+            'param' => $param,
+        ));
+    }
+    
+    /**
+    * Deletes a LB stickiness policy.
+    *
+    * @param string $id the ID of the LB stickiness policy
+    */
+    
+    public function deleteLBStickinessPolicy($id) {
+
+        if (empty($id)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
+        }
+
+        return $this->request("deleteLBStickinessPolicy", array(
+            'id' => $id,
+        ));
+    }
+    
+    /**
+    * Lists load balancer rules.
+    *
+    * @param string $account List resources by account. Must be used with the domainId
+    *         parameter.
+    * @param string $domainId list only resources belonging to the domain specified
+    * @param string $id the ID of the load balancer rule
+    * @param string $isRecursive defaults to false, but if true, lists all resources f
+    *        rom the parent specified by the domainId till leaves.
+    * @param string $keyword List by keyword
+    * @param string $listAll If set to false, list only resources belonging to the com
+    *        mand&#039;s caller; if set to true - list resources that the caller is authorize
+    *        d to see. Default value is false
+    * @param string $name the name of the load balancer rule
+    * @param string $page 
+    * @param string $pageSize 
+    * @param string $projectId list objects by project
+    * @param string $publicIpId the public IP address id of the load balancer rule
+    * @param string $tags List resources by tags (key/value pairs)
+    * @param string $virtualMachineId the ID of the virtual machine of the load balanc
+    *        er rule
+    * @param string $zoneId the availability zone ID
+    * @param string $page Pagination
+    */
+    
+    public function listLoadBalancerRules($account = "", $domainId = "", $id = "", $isRecursive = "", $keyword = "", $listAll = "", $name = "", $page = "", $pageSize = "", $projectId = "", $publicIpId = "", $tags = "", $virtualMachineId = "", $zoneId = "", $page = "") {
+
+        return $this->request("listLoadBalancerRules", array(
+            'account' => $account,
+            'domainid' => $domainId,
+            'id' => $id,
+            'isrecursive' => $isRecursive,
+            'keyword' => $keyword,
+            'listall' => $listAll,
+            'name' => $name,
+            'page' => $page,
+            'pagesize' => $pageSize,
+            'projectid' => $projectId,
+            'publicipid' => $publicIpId,
+            'tags' => $tags,
+            'virtualmachineid' => $virtualMachineId,
+            'zoneid' => $zoneId,
+            'page' => $page,
+        ));
+    }
+    
+    /**
+    * Lists LBStickiness policies.
+    *
+    * @param string $lbRuleId the ID of the load balancer rule
+    * @param string $keyword List by keyword
+    * @param string $page 
+    * @param string $pageSize 
+    * @param string $page Pagination
+    */
+    
+    public function listLBStickinessPolicies($lbRuleId, $keyword = "", $page = "", $pageSize = "", $page = "") {
+
+        if (empty($lbRuleId)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "lbRuleId"), MISSING_ARGUMENT);
+        }
+
+        return $this->request("listLBStickinessPolicies", array(
+            'lbruleid' => $lbRuleId,
+            'keyword' => $keyword,
+            'page' => $page,
+            'pagesize' => $pageSize,
+            'page' => $page,
+        ));
+    }
+    
+    /**
+    * List all virtual machine instances that are assigned to a load balancer rule.
+    *
+    * @param string $id the ID of the load balancer rule
+    * @param string $applied true if listing all virtual machines currently applied to
+    *         the load balancer rule; default is true
+    * @param string $keyword List by keyword
+    * @param string $page 
+    * @param string $pageSize 
+    * @param string $page Pagination
+    */
+    
+    public function listLoadBalancerRuleInstances($id, $applied = "", $keyword = "", $page = "", $pageSize = "", $page = "") {
+
+        if (empty($id)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
+        }
+
+        return $this->request("listLoadBalancerRuleInstances", array(
+            'id' => $id,
+            'applied' => $applied,
+            'keyword' => $keyword,
+            'page' => $page,
+            'pagesize' => $pageSize,
+            'page' => $page,
+        ));
+    }
+    
+    /**
+    * Updates load balancer
+    *
+    * @param string $id the id of the load balancer rule to update
+    * @param string $algorithm load balancer algorithm (source, roundrobin, leastconn)
+    *        
+    * @param string $description the description of the load balancer rule
+    * @param string $name the name of the load balancer rule
+    */
+    
+    public function updateLoadBalancerRule($id, $algorithm = "", $description = "", $name = "") {
+
+        if (empty($id)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
+        }
+
+        return $this->request("updateLoadBalancerRule", array(
+            'id' => $id,
+            'algorithm' => $algorithm,
+            'description' => $description,
+            'name' => $name,
         ));
     }
     
@@ -2671,95 +3084,6 @@ class CloudStackClient extends BaseCloudStackClient {
             'url' => $url,
             'virtualmachineid' => $virtualMachineId,
             'volumeid' => $volumeId,
-        ));
-    }
-    
-    /**
-    * Registers an existing template into the Cloud.com cloud.
-    *
-    * @param string $displayText the display text of the template. This is usually use
-    *        d for display purposes.
-    * @param string $format the format for the template. Possible values include QCOW2
-    *        , RAW, and VHD.
-    * @param string $hypervisor the target hypervisor for the template
-    * @param string $name the name of the template
-    * @param string $osTypeId the ID of the OS Type that best represents the OS of thi
-    *        s template.
-    * @param string $url the URL of where the template is hosted. Possible URL include
-    *         http:// and https://
-    * @param string $zoneId the ID of the zone the template is to be hosted on
-    * @param string $account an optional accountName. Must be used with domainId.
-    * @param string $bits 32 or 64 bits support. 64 by default
-    * @param string $checksum the MD5 checksum value of this template
-    * @param string $details Template details in key/value pairs.
-    * @param string $domainId an optional domainId. If the account parameter is used, 
-    *        domainId must also be used.
-    * @param string $isExtractable true if the template or its derivatives are extract
-    *        able; default is false
-    * @param string $isFeatured true if this template is a featured template, false ot
-    *        herwise
-    * @param string $isPublic true if the template is available to all accounts; defau
-    *        lt is true
-    * @param string $passwordEnabled true if the template supports the password reset 
-    *        feature; default is false
-    * @param string $projectId Register template for the project
-    * @param string $requireShvm true if this template requires HVM
-    * @param string $sshKeyEnabled true if the template supports the sshkey upload fea
-    *        ture; default is false
-    * @param string $templateTag the tag for this template.
-    */
-    
-    public function registerTemplate($displayText, $format, $hypervisor, $name, $osTypeId, $url, $zoneId, $account = "", $bits = "", $checksum = "", $details = "", $domainId = "", $isExtractable = "", $isFeatured = "", $isPublic = "", $passwordEnabled = "", $projectId = "", $requireShvm = "", $sshKeyEnabled = "", $templateTag = "") {
-
-        if (empty($displayText)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "displayText"), MISSING_ARGUMENT);
-        }
-
-        if (empty($format)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "format"), MISSING_ARGUMENT);
-        }
-
-        if (empty($hypervisor)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "hypervisor"), MISSING_ARGUMENT);
-        }
-
-        if (empty($name)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "name"), MISSING_ARGUMENT);
-        }
-
-        if (empty($osTypeId)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "osTypeId"), MISSING_ARGUMENT);
-        }
-
-        if (empty($url)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "url"), MISSING_ARGUMENT);
-        }
-
-        if (empty($zoneId)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "zoneId"), MISSING_ARGUMENT);
-        }
-
-        return $this->request("registerTemplate", array(
-            'displaytext' => $displayText,
-            'format' => $format,
-            'hypervisor' => $hypervisor,
-            'name' => $name,
-            'ostypeid' => $osTypeId,
-            'url' => $url,
-            'zoneid' => $zoneId,
-            'account' => $account,
-            'bits' => $bits,
-            'checksum' => $checksum,
-            'details' => $details,
-            'domainid' => $domainId,
-            'isextractable' => $isExtractable,
-            'isfeatured' => $isFeatured,
-            'ispublic' => $isPublic,
-            'passwordenabled' => $passwordEnabled,
-            'projectid' => $projectId,
-            'requireshvm' => $requireShvm,
-            'sshkeyenabled' => $sshKeyEnabled,
-            'templatetag' => $templateTag,
         ));
     }
     
@@ -2868,12 +3192,13 @@ class CloudStackClient extends BaseCloudStackClient {
     * @param string $name the template name
     * @param string $page 
     * @param string $pageSize 
-    * @param string $projectId list firewall rules by project
+    * @param string $projectId list objects by project
+    * @param string $tags List resources by tags (key/value pairs)
     * @param string $zoneId list templates by zoneId
     * @param string $page Pagination
     */
     
-    public function listTemplates($templateFilter, $account = "", $domainId = "", $hypervisor = "", $id = "", $isRecursive = "", $keyword = "", $listAll = "", $name = "", $page = "", $pageSize = "", $projectId = "", $zoneId = "", $page = "") {
+    public function listTemplates($templateFilter, $account = "", $domainId = "", $hypervisor = "", $id = "", $isRecursive = "", $keyword = "", $listAll = "", $name = "", $page = "", $pageSize = "", $projectId = "", $tags = "", $zoneId = "", $page = "") {
 
         if (empty($templateFilter)) {
             throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "templateFilter"), MISSING_ARGUMENT);
@@ -2892,6 +3217,7 @@ class CloudStackClient extends BaseCloudStackClient {
             'page' => $page,
             'pagesize' => $pageSize,
             'projectid' => $projectId,
+            'tags' => $tags,
             'zoneid' => $zoneId,
             'page' => $page,
         ));
@@ -3002,613 +3328,6 @@ class CloudStackClient extends BaseCloudStackClient {
     }
     
     /**
-    * Attaches an ISO to a virtual machine.
-    *
-    * @param string $id the ID of the ISO file
-    * @param string $virtualMachineId the ID of the virtual machine
-    */
-    
-    public function attachIso($id, $virtualMachineId) {
-
-        if (empty($id)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
-        }
-
-        if (empty($virtualMachineId)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "virtualMachineId"), MISSING_ARGUMENT);
-        }
-
-        return $this->request("attachIso", array(
-            'id' => $id,
-            'virtualmachineid' => $virtualMachineId,
-        ));
-    }
-    
-    /**
-    * Detaches any ISO file (if any) currently attached to a virtual machine.
-    *
-    * @param string $virtualMachineId The ID of the virtual machine
-    */
-    
-    public function detachIso($virtualMachineId) {
-
-        if (empty($virtualMachineId)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "virtualMachineId"), MISSING_ARGUMENT);
-        }
-
-        return $this->request("detachIso", array(
-            'virtualmachineid' => $virtualMachineId,
-        ));
-    }
-    
-    /**
-    * Lists all available ISO files.
-    *
-    * @param string $account List resources by account. Must be used with the domainId
-    *         parameter.
-    * @param string $bootable true if the ISO is bootable, false otherwise
-    * @param string $domainId list only resources belonging to the domain specified
-    * @param string $hypervisor the hypervisor for which to restrict the search
-    * @param string $id list all isos by id
-    * @param string $isoFilter possible values are &quot;featured&quot;, &quot;self&qu
-    *        ot;, &quot;self-executable&quot;,&quot;executable&quot;, and &quot;community&quo
-    *        t;. * featured-ISOs that are featured and are publicself-ISOs that have been reg
-    *        istered/created by the owner. * selfexecutable-ISOs that have been registered/cr
-    *        eated by the owner that can be used to deploy a new VM. * executable-all ISOs th
-    *        at can be used to deploy a new VM * community-ISOs that are public.
-    * @param string $isPublic true if the ISO is publicly available to all users, fals
-    *        e otherwise.
-    * @param string $isReady true if this ISO is ready to be deployed
-    * @param string $isRecursive defaults to false, but if true, lists all resources f
-    *        rom the parent specified by the domainId till leaves.
-    * @param string $keyword List by keyword
-    * @param string $listAll If set to false, list only resources belonging to the com
-    *        mand&#039;s caller; if set to true - list resources that the caller is authorize
-    *        d to see. Default value is false
-    * @param string $name list all isos by name
-    * @param string $page 
-    * @param string $pageSize 
-    * @param string $projectId list firewall rules by project
-    * @param string $zoneId the ID of the zone
-    * @param string $page Pagination
-    */
-    
-    public function listIsos($account = "", $bootable = "", $domainId = "", $hypervisor = "", $id = "", $isoFilter = "", $isPublic = "", $isReady = "", $isRecursive = "", $keyword = "", $listAll = "", $name = "", $page = "", $pageSize = "", $projectId = "", $zoneId = "", $page = "") {
-
-        return $this->request("listIsos", array(
-            'account' => $account,
-            'bootable' => $bootable,
-            'domainid' => $domainId,
-            'hypervisor' => $hypervisor,
-            'id' => $id,
-            'isofilter' => $isoFilter,
-            'ispublic' => $isPublic,
-            'isready' => $isReady,
-            'isrecursive' => $isRecursive,
-            'keyword' => $keyword,
-            'listall' => $listAll,
-            'name' => $name,
-            'page' => $page,
-            'pagesize' => $pageSize,
-            'projectid' => $projectId,
-            'zoneid' => $zoneId,
-            'page' => $page,
-        ));
-    }
-    
-    /**
-    * Registers an existing ISO into the Cloud.com Cloud.
-    *
-    * @param string $displayText the display text of the ISO. This is usually used for
-    *         display purposes.
-    * @param string $name the name of the ISO
-    * @param string $url the URL to where the ISO is currently being hosted
-    * @param string $zoneId the ID of the zone you wish to register the ISO to.
-    * @param string $account an optional account name. Must be used with domainId.
-    * @param string $bootable true if this ISO is bootable. If not passed explicitly i
-    *        ts assumed to be true
-    * @param string $checksum the MD5 checksum value of this ISO
-    * @param string $domainId an optional domainId. If the account parameter is used, 
-    *        domainId must also be used.
-    * @param string $isExtractable true if the iso or its derivatives are extractable;
-    *         default is false
-    * @param string $isFeatured true if you want this ISO to be featured
-    * @param string $isPublic true if you want to register the ISO to be publicly avai
-    *        lable to all users, false otherwise.
-    * @param string $osTypeId the ID of the OS Type that best represents the OS of thi
-    *        s ISO. If the iso is bootable this parameter needs to be passed
-    * @param string $projectId Register iso for the project
-    */
-    
-    public function registerIso($displayText, $name, $url, $zoneId, $account = "", $bootable = "", $checksum = "", $domainId = "", $isExtractable = "", $isFeatured = "", $isPublic = "", $osTypeId = "", $projectId = "") {
-
-        if (empty($displayText)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "displayText"), MISSING_ARGUMENT);
-        }
-
-        if (empty($name)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "name"), MISSING_ARGUMENT);
-        }
-
-        if (empty($url)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "url"), MISSING_ARGUMENT);
-        }
-
-        if (empty($zoneId)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "zoneId"), MISSING_ARGUMENT);
-        }
-
-        return $this->request("registerIso", array(
-            'displaytext' => $displayText,
-            'name' => $name,
-            'url' => $url,
-            'zoneid' => $zoneId,
-            'account' => $account,
-            'bootable' => $bootable,
-            'checksum' => $checksum,
-            'domainid' => $domainId,
-            'isextractable' => $isExtractable,
-            'isfeatured' => $isFeatured,
-            'ispublic' => $isPublic,
-            'ostypeid' => $osTypeId,
-            'projectid' => $projectId,
-        ));
-    }
-    
-    /**
-    * Updates an ISO file.
-    *
-    * @param string $id the ID of the image file
-    * @param string $bootable true if image is bootable, false otherwise
-    * @param string $displayText the display text of the image
-    * @param string $format the format for the image
-    * @param string $name the name of the image file
-    * @param string $osTypeId the ID of the OS type that best represents the OS of thi
-    *        s image.
-    * @param string $passwordEnabled true if the image supports the password reset fea
-    *        ture; default is false
-    * @param string $sortKey sort key of the template, integer
-    */
-    
-    public function updateIso($id, $bootable = "", $displayText = "", $format = "", $name = "", $osTypeId = "", $passwordEnabled = "", $sortKey = "") {
-
-        if (empty($id)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
-        }
-
-        return $this->request("updateIso", array(
-            'id' => $id,
-            'bootable' => $bootable,
-            'displaytext' => $displayText,
-            'format' => $format,
-            'name' => $name,
-            'ostypeid' => $osTypeId,
-            'passwordenabled' => $passwordEnabled,
-            'sortkey' => $sortKey,
-        ));
-    }
-    
-    /**
-    * Deletes an ISO file.
-    *
-    * @param string $id the ID of the ISO file
-    * @param string $zoneId the ID of the zone of the ISO file. If not specified, the 
-    *        ISO will be deleted from all the zones
-    */
-    
-    public function deleteIso($id, $zoneId = "") {
-
-        if (empty($id)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
-        }
-
-        return $this->request("deleteIso", array(
-            'id' => $id,
-            'zoneid' => $zoneId,
-        ));
-    }
-    
-    /**
-    * Copies a template from one zone to another.
-    *
-    * @param string $id Template ID.
-    * @param string $destzoneId ID of the zone the template is being copied to.
-    * @param string $sourceZoneId ID of the zone the template is currently hosted on.
-    */
-    
-    public function copyIso($id, $destzoneId, $sourceZoneId) {
-
-        if (empty($id)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
-        }
-
-        if (empty($destzoneId)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "destzoneId"), MISSING_ARGUMENT);
-        }
-
-        if (empty($sourceZoneId)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "sourceZoneId"), MISSING_ARGUMENT);
-        }
-
-        return $this->request("copyIso", array(
-            'id' => $id,
-            'destzoneid' => $destzoneId,
-            'sourcezoneid' => $sourceZoneId,
-        ));
-    }
-    
-    /**
-    * Updates iso permissions
-    *
-    * @param string $id the template ID
-    * @param string $accounts a comma delimited list of accounts. If specified, &quot;
-    *        op&quot; parameter has to be passed in.
-    * @param string $isExtractable true if the template/iso is extractable, false othe
-    *        r wise. Can be set only by root admin
-    * @param string $isFeatured true for featured template/iso, false otherwise
-    * @param string $isPublic true for public template/iso, false for private template
-    *        s/isos
-    * @param string $op permission operator (add, remove, reset)
-    * @param string $projectIds a comma delimited list of projects. If specified, &quo
-    *        t;op&quot; parameter has to be passed in.
-    */
-    
-    public function updateIsoPermissions($id, $accounts = "", $isExtractable = "", $isFeatured = "", $isPublic = "", $op = "", $projectIds = "") {
-
-        if (empty($id)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
-        }
-
-        return $this->request("updateIsoPermissions", array(
-            'id' => $id,
-            'accounts' => $accounts,
-            'isextractable' => $isExtractable,
-            'isfeatured' => $isFeatured,
-            'ispublic' => $isPublic,
-            'op' => $op,
-            'projectids' => $projectIds,
-        ));
-    }
-    
-    /**
-    * List template visibility and all accounts that have permissions to view this template.
-    *
-    * @param string $id the template ID
-    * @param string $page Pagination
-    */
-    
-    public function listIsoPermissions($id, $page = "") {
-
-        if (empty($id)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
-        }
-
-        return $this->request("listIsoPermissions", array(
-            'id' => $id,
-            'page' => $page,
-        ));
-    }
-    
-    /**
-    * Extracts an ISO
-    *
-    * @param string $id the ID of the ISO file
-    * @param string $mode the mode of extraction - HTTP_DOWNLOAD or FTP_UPLOAD
-    * @param string $url the url to which the ISO would be extracted
-    * @param string $zoneId the ID of the zone where the ISO is originally located
-    */
-    
-    public function extractIso($id, $mode, $url = "", $zoneId = "") {
-
-        if (empty($id)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
-        }
-
-        if (empty($mode)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "mode"), MISSING_ARGUMENT);
-        }
-
-        return $this->request("extractIso", array(
-            'id' => $id,
-            'mode' => $mode,
-            'url' => $url,
-            'zoneid' => $zoneId,
-        ));
-    }
-    
-    /**
-    * Lists all port forwarding rules for an IP address.
-    *
-    * @param string $account List resources by account. Must be used with the domainId
-    *         parameter.
-    * @param string $domainId list only resources belonging to the domain specified
-    * @param string $id Lists rule with the specified ID.
-    * @param string $ipAddressId the id of IP address of the port forwarding services
-    * @param string $isRecursive defaults to false, but if true, lists all resources f
-    *        rom the parent specified by the domainId till leaves.
-    * @param string $keyword List by keyword
-    * @param string $listAll If set to false, list only resources belonging to the com
-    *        mand&#039;s caller; if set to true - list resources that the caller is authorize
-    *        d to see. Default value is false
-    * @param string $page 
-    * @param string $pageSize 
-    * @param string $projectId list firewall rules by project
-    * @param string $page Pagination
-    */
-    
-    public function listPortForwardingRules($account = "", $domainId = "", $id = "", $ipAddressId = "", $isRecursive = "", $keyword = "", $listAll = "", $page = "", $pageSize = "", $projectId = "", $page = "") {
-
-        return $this->request("listPortForwardingRules", array(
-            'account' => $account,
-            'domainid' => $domainId,
-            'id' => $id,
-            'ipaddressid' => $ipAddressId,
-            'isrecursive' => $isRecursive,
-            'keyword' => $keyword,
-            'listall' => $listAll,
-            'page' => $page,
-            'pagesize' => $pageSize,
-            'projectid' => $projectId,
-            'page' => $page,
-        ));
-    }
-    
-    /**
-    * Creates a port forwarding rule
-    *
-    * @param string $ipAddressId the IP address id of the port forwarding rule
-    * @param string $privatePort the starting port of port forwarding rule&#039;s priv
-    *        ate port range
-    * @param string $protocol the protocol for the port fowarding rule. Valid values a
-    *        re TCP or UDP.
-    * @param string $publicPort the starting port of port forwarding rule&#039;s publi
-    *        c port range
-    * @param string $virtualMachineId the ID of the virtual machine for the port forwa
-    *        rding rule
-    * @param string $cidrList the cidr list to forward traffic from
-    * @param string $openFirewall if true, firewall rule for source/end pubic port is 
-    *        automatically created; if false - firewall rule has to be created explicitely. H
-    *        as value true by default
-    */
-    
-    public function createPortForwardingRule($ipAddressId, $privatePort, $protocol, $publicPort, $virtualMachineId, $cidrList = "", $openFirewall = "") {
-
-        if (empty($ipAddressId)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "ipAddressId"), MISSING_ARGUMENT);
-        }
-
-        if (empty($privatePort)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "privatePort"), MISSING_ARGUMENT);
-        }
-
-        if (empty($protocol)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "protocol"), MISSING_ARGUMENT);
-        }
-
-        if (empty($publicPort)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "publicPort"), MISSING_ARGUMENT);
-        }
-
-        if (empty($virtualMachineId)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "virtualMachineId"), MISSING_ARGUMENT);
-        }
-
-        return $this->request("createPortForwardingRule", array(
-            'ipaddressid' => $ipAddressId,
-            'privateport' => $privatePort,
-            'protocol' => $protocol,
-            'publicport' => $publicPort,
-            'virtualmachineid' => $virtualMachineId,
-            'cidrlist' => $cidrList,
-            'openfirewall' => $openFirewall,
-        ));
-    }
-    
-    /**
-    * Deletes a port forwarding rule
-    *
-    * @param string $id the ID of the port forwarding rule
-    */
-    
-    public function deletePortForwardingRule($id) {
-
-        if (empty($id)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
-        }
-
-        return $this->request("deletePortForwardingRule", array(
-            'id' => $id,
-        ));
-    }
-    
-    /**
-    * Creates a firewall rule for a given ip address
-    *
-    * @param string $protocol the protocol for the firewall rule. Valid values are TCP
-    *        /UDP/ICMP.
-    * @param string $cidrList the cidr list to forward traffic from
-    * @param string $endPort the ending port of firewall rule
-    * @param string $icmpCode error code for this icmp message
-    * @param string $icmpType type of the icmp message being sent
-    * @param string $ipAddressId the IP address id of the port forwarding rule
-    * @param string $startPort the starting port of firewall rule
-    * @param string $type type of firewallrule: system/user
-    */
-    
-    public function createFirewallRule($protocol, $cidrList = "", $endPort = "", $icmpCode = "", $icmpType = "", $ipAddressId = "", $startPort = "", $type = "") {
-
-        if (empty($protocol)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "protocol"), MISSING_ARGUMENT);
-        }
-
-        return $this->request("createFirewallRule", array(
-            'protocol' => $protocol,
-            'cidrlist' => $cidrList,
-            'endport' => $endPort,
-            'icmpcode' => $icmpCode,
-            'icmptype' => $icmpType,
-            'ipaddressid' => $ipAddressId,
-            'startport' => $startPort,
-            'type' => $type,
-        ));
-    }
-    
-    /**
-    * Deletes a firewall rule
-    *
-    * @param string $id the ID of the firewall rule
-    */
-    
-    public function deleteFirewallRule($id) {
-
-        if (empty($id)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
-        }
-
-        return $this->request("deleteFirewallRule", array(
-            'id' => $id,
-        ));
-    }
-    
-    /**
-    * Lists all firewall rules for an IP address.
-    *
-    * @param string $account List resources by account. Must be used with the domainId
-    *         parameter.
-    * @param string $domainId list only resources belonging to the domain specified
-    * @param string $id Lists rule with the specified ID.
-    * @param string $ipAddressId the id of IP address of the firwall services
-    * @param string $isRecursive defaults to false, but if true, lists all resources f
-    *        rom the parent specified by the domainId till leaves.
-    * @param string $keyword List by keyword
-    * @param string $listAll If set to false, list only resources belonging to the com
-    *        mand&#039;s caller; if set to true - list resources that the caller is authorize
-    *        d to see. Default value is false
-    * @param string $page 
-    * @param string $pageSize 
-    * @param string $projectId list firewall rules by project
-    * @param string $page Pagination
-    */
-    
-    public function listFirewallRules($account = "", $domainId = "", $id = "", $ipAddressId = "", $isRecursive = "", $keyword = "", $listAll = "", $page = "", $pageSize = "", $projectId = "", $page = "") {
-
-        return $this->request("listFirewallRules", array(
-            'account' => $account,
-            'domainid' => $domainId,
-            'id' => $id,
-            'ipaddressid' => $ipAddressId,
-            'isrecursive' => $isRecursive,
-            'keyword' => $keyword,
-            'listall' => $listAll,
-            'page' => $page,
-            'pagesize' => $pageSize,
-            'projectid' => $projectId,
-            'page' => $page,
-        ));
-    }
-    
-    /**
-    * Adds a SRX firewall device
-    *
-    * @param string $networkDeviceType supports only JuniperSRXFirewall
-    * @param string $password Credentials to reach SRX firewall device
-    * @param string $physicalNetworkId the Physical Network ID
-    * @param string $url URL of the SRX appliance.
-    * @param string $userName Credentials to reach SRX firewall device
-    */
-    
-    public function addSrxFirewall($networkDeviceType, $password, $physicalNetworkId, $url, $userName) {
-
-        if (empty($networkDeviceType)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "networkDeviceType"), MISSING_ARGUMENT);
-        }
-
-        if (empty($password)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "password"), MISSING_ARGUMENT);
-        }
-
-        if (empty($physicalNetworkId)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "physicalNetworkId"), MISSING_ARGUMENT);
-        }
-
-        if (empty($url)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "url"), MISSING_ARGUMENT);
-        }
-
-        if (empty($userName)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "userName"), MISSING_ARGUMENT);
-        }
-
-        return $this->request("addSrxFirewall", array(
-            'networkdevicetype' => $networkDeviceType,
-            'password' => $password,
-            'physicalnetworkid' => $physicalNetworkId,
-            'url' => $url,
-            'username' => $userName,
-        ));
-    }
-    
-    /**
-    * delete a SRX firewall device
-    *
-    * @param string $fwDeviceId srx firewall device ID
-    */
-    
-    public function deleteSrxFirewall($fwDeviceId) {
-
-        if (empty($fwDeviceId)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "fwDeviceId"), MISSING_ARGUMENT);
-        }
-
-        return $this->request("deleteSrxFirewall", array(
-            'fwdeviceid' => $fwDeviceId,
-        ));
-    }
-    
-    /**
-    * Configures a SRX firewall device
-    *
-    * @param string $fwDeviceId SRX firewall device ID
-    * @param string $fwDeviceCapacity capacity of the firewall device, Capacity will b
-    *        e interpreted as number of networks device can handle
-    */
-    
-    public function configureSrxFirewall($fwDeviceId, $fwDeviceCapacity = "") {
-
-        if (empty($fwDeviceId)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "fwDeviceId"), MISSING_ARGUMENT);
-        }
-
-        return $this->request("configureSrxFirewall", array(
-            'fwdeviceid' => $fwDeviceId,
-            'fwdevicecapacity' => $fwDeviceCapacity,
-        ));
-    }
-    
-    /**
-    * lists SRX firewall devices in a physical network
-    *
-    * @param string $fwDeviceId SRX firewall device ID
-    * @param string $keyword List by keyword
-    * @param string $page 
-    * @param string $pageSize 
-    * @param string $physicalNetworkId the Physical Network ID
-    * @param string $page Pagination
-    */
-    
-    public function listSrxFirewalls($fwDeviceId = "", $keyword = "", $page = "", $pageSize = "", $physicalNetworkId = "", $page = "") {
-
-        return $this->request("listSrxFirewalls", array(
-            'fwdeviceid' => $fwDeviceId,
-            'keyword' => $keyword,
-            'page' => $page,
-            'pagesize' => $pageSize,
-            'physicalnetworkid' => $physicalNetworkId,
-            'page' => $page,
-        ));
-    }
-    
-    /**
     * Starts a router.
     *
     * @param string $id the ID of the router
@@ -3708,6 +3427,8 @@ class CloudStackClient extends BaseCloudStackClient {
     * @param string $account List resources by account. Must be used with the domainId
     *         parameter.
     * @param string $domainId list only resources belonging to the domain specified
+    * @param string $forVpc if true is passed for this parameter, list only VPC router
+    *        s
     * @param string $hostId the host ID of the router
     * @param string $id the ID of the disk router
     * @param string $isRecursive defaults to false, but if true, lists all resources f
@@ -3721,17 +3442,19 @@ class CloudStackClient extends BaseCloudStackClient {
     * @param string $page 
     * @param string $pageSize 
     * @param string $podId the Pod ID of the router
-    * @param string $projectId list firewall rules by project
+    * @param string $projectId list objects by project
     * @param string $state the state of the router
+    * @param string $vpcId List networks by VPC
     * @param string $zoneId the Zone ID of the router
     * @param string $page Pagination
     */
     
-    public function listRouters($account = "", $domainId = "", $hostId = "", $id = "", $isRecursive = "", $keyword = "", $listAll = "", $name = "", $networkId = "", $page = "", $pageSize = "", $podId = "", $projectId = "", $state = "", $zoneId = "", $page = "") {
+    public function listRouters($account = "", $domainId = "", $forVpc = "", $hostId = "", $id = "", $isRecursive = "", $keyword = "", $listAll = "", $name = "", $networkId = "", $page = "", $pageSize = "", $podId = "", $projectId = "", $state = "", $vpcId = "", $zoneId = "", $page = "") {
 
         return $this->request("listRouters", array(
             'account' => $account,
             'domainid' => $domainId,
+            'forvpc' => $forVpc,
             'hostid' => $hostId,
             'id' => $id,
             'isrecursive' => $isRecursive,
@@ -3744,6 +3467,7 @@ class CloudStackClient extends BaseCloudStackClient {
             'podid' => $podId,
             'projectid' => $projectId,
             'state' => $state,
+            'vpcid' => $vpcId,
             'zoneid' => $zoneId,
             'page' => $page,
         ));
@@ -3933,10 +3657,11 @@ class CloudStackClient extends BaseCloudStackClient {
     * @param string $page 
     * @param string $pageSize 
     * @param string $state list projects by state
+    * @param string $tags List projects by tags (key/value pairs)
     * @param string $page Pagination
     */
     
-    public function listProjects($account = "", $displayText = "", $domainId = "", $id = "", $isRecursive = "", $keyword = "", $listAll = "", $name = "", $page = "", $pageSize = "", $state = "", $page = "") {
+    public function listProjects($account = "", $displayText = "", $domainId = "", $id = "", $isRecursive = "", $keyword = "", $listAll = "", $name = "", $page = "", $pageSize = "", $state = "", $tags = "", $page = "") {
 
         return $this->request("listProjects", array(
             'account' => $account,
@@ -3950,6 +3675,7 @@ class CloudStackClient extends BaseCloudStackClient {
             'page' => $page,
             'pagesize' => $pageSize,
             'state' => $state,
+            'tags' => $tags,
             'page' => $page,
         ));
     }
@@ -4037,10 +3763,269 @@ class CloudStackClient extends BaseCloudStackClient {
     }
     
     /**
+    * Attaches an ISO to a virtual machine.
+    *
+    * @param string $id the ID of the ISO file
+    * @param string $virtualMachineId the ID of the virtual machine
+    */
+    
+    public function attachIso($id, $virtualMachineId) {
+
+        if (empty($id)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
+        }
+
+        if (empty($virtualMachineId)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "virtualMachineId"), MISSING_ARGUMENT);
+        }
+
+        return $this->request("attachIso", array(
+            'id' => $id,
+            'virtualmachineid' => $virtualMachineId,
+        ));
+    }
+    
+    /**
+    * Detaches any ISO file (if any) currently attached to a virtual machine.
+    *
+    * @param string $virtualMachineId The ID of the virtual machine
+    */
+    
+    public function detachIso($virtualMachineId) {
+
+        if (empty($virtualMachineId)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "virtualMachineId"), MISSING_ARGUMENT);
+        }
+
+        return $this->request("detachIso", array(
+            'virtualmachineid' => $virtualMachineId,
+        ));
+    }
+    
+    /**
+    * Lists all available ISO files.
+    *
+    * @param string $account List resources by account. Must be used with the domainId
+    *         parameter.
+    * @param string $bootable true if the ISO is bootable, false otherwise
+    * @param string $domainId list only resources belonging to the domain specified
+    * @param string $hypervisor the hypervisor for which to restrict the search
+    * @param string $id list all isos by id
+    * @param string $isoFilter possible values are &quot;featured&quot;, &quot;self&qu
+    *        ot;, &quot;self-executable&quot;,&quot;executable&quot;, and &quot;community&quo
+    *        t;. * featured-ISOs that are featured and are publicself-ISOs that have been reg
+    *        istered/created by the owner. * selfexecutable-ISOs that have been registered/cr
+    *        eated by the owner that can be used to deploy a new VM. * executable-all ISOs th
+    *        at can be used to deploy a new VM * community-ISOs that are public.
+    * @param string $isPublic true if the ISO is publicly available to all users, fals
+    *        e otherwise.
+    * @param string $isReady true if this ISO is ready to be deployed
+    * @param string $isRecursive defaults to false, but if true, lists all resources f
+    *        rom the parent specified by the domainId till leaves.
+    * @param string $keyword List by keyword
+    * @param string $listAll If set to false, list only resources belonging to the com
+    *        mand&#039;s caller; if set to true - list resources that the caller is authorize
+    *        d to see. Default value is false
+    * @param string $name list all isos by name
+    * @param string $page 
+    * @param string $pageSize 
+    * @param string $projectId list objects by project
+    * @param string $tags List resources by tags (key/value pairs)
+    * @param string $zoneId the ID of the zone
+    * @param string $page Pagination
+    */
+    
+    public function listIsos($account = "", $bootable = "", $domainId = "", $hypervisor = "", $id = "", $isoFilter = "", $isPublic = "", $isReady = "", $isRecursive = "", $keyword = "", $listAll = "", $name = "", $page = "", $pageSize = "", $projectId = "", $tags = "", $zoneId = "", $page = "") {
+
+        return $this->request("listIsos", array(
+            'account' => $account,
+            'bootable' => $bootable,
+            'domainid' => $domainId,
+            'hypervisor' => $hypervisor,
+            'id' => $id,
+            'isofilter' => $isoFilter,
+            'ispublic' => $isPublic,
+            'isready' => $isReady,
+            'isrecursive' => $isRecursive,
+            'keyword' => $keyword,
+            'listall' => $listAll,
+            'name' => $name,
+            'page' => $page,
+            'pagesize' => $pageSize,
+            'projectid' => $projectId,
+            'tags' => $tags,
+            'zoneid' => $zoneId,
+            'page' => $page,
+        ));
+    }
+    
+    /**
+    * Updates an ISO file.
+    *
+    * @param string $id the ID of the image file
+    * @param string $bootable true if image is bootable, false otherwise
+    * @param string $displayText the display text of the image
+    * @param string $format the format for the image
+    * @param string $name the name of the image file
+    * @param string $osTypeId the ID of the OS type that best represents the OS of thi
+    *        s image.
+    * @param string $passwordEnabled true if the image supports the password reset fea
+    *        ture; default is false
+    * @param string $sortKey sort key of the template, integer
+    */
+    
+    public function updateIso($id, $bootable = "", $displayText = "", $format = "", $name = "", $osTypeId = "", $passwordEnabled = "", $sortKey = "") {
+
+        if (empty($id)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
+        }
+
+        return $this->request("updateIso", array(
+            'id' => $id,
+            'bootable' => $bootable,
+            'displaytext' => $displayText,
+            'format' => $format,
+            'name' => $name,
+            'ostypeid' => $osTypeId,
+            'passwordenabled' => $passwordEnabled,
+            'sortkey' => $sortKey,
+        ));
+    }
+    
+    /**
+    * Deletes an ISO file.
+    *
+    * @param string $id the ID of the ISO file
+    * @param string $zoneId the ID of the zone of the ISO file. If not specified, the 
+    *        ISO will be deleted from all the zones
+    */
+    
+    public function deleteIso($id, $zoneId = "") {
+
+        if (empty($id)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
+        }
+
+        return $this->request("deleteIso", array(
+            'id' => $id,
+            'zoneid' => $zoneId,
+        ));
+    }
+    
+    /**
+    * Copies a template from one zone to another.
+    *
+    * @param string $id Template ID.
+    * @param string $destzoneId ID of the zone the template is being copied to.
+    * @param string $sourceZoneId ID of the zone the template is currently hosted on.
+    */
+    
+    public function copyIso($id, $destzoneId, $sourceZoneId) {
+
+        if (empty($id)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
+        }
+
+        if (empty($destzoneId)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "destzoneId"), MISSING_ARGUMENT);
+        }
+
+        if (empty($sourceZoneId)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "sourceZoneId"), MISSING_ARGUMENT);
+        }
+
+        return $this->request("copyIso", array(
+            'id' => $id,
+            'destzoneid' => $destzoneId,
+            'sourcezoneid' => $sourceZoneId,
+        ));
+    }
+    
+    /**
+    * Updates iso permissions
+    *
+    * @param string $id the template ID
+    * @param string $accounts a comma delimited list of accounts. If specified, &quot;
+    *        op&quot; parameter has to be passed in.
+    * @param string $isExtractable true if the template/iso is extractable, false othe
+    *        r wise. Can be set only by root admin
+    * @param string $isFeatured true for featured template/iso, false otherwise
+    * @param string $isPublic true for public template/iso, false for private template
+    *        s/isos
+    * @param string $op permission operator (add, remove, reset)
+    * @param string $projectIds a comma delimited list of projects. If specified, &quo
+    *        t;op&quot; parameter has to be passed in.
+    */
+    
+    public function updateIsoPermissions($id, $accounts = "", $isExtractable = "", $isFeatured = "", $isPublic = "", $op = "", $projectIds = "") {
+
+        if (empty($id)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
+        }
+
+        return $this->request("updateIsoPermissions", array(
+            'id' => $id,
+            'accounts' => $accounts,
+            'isextractable' => $isExtractable,
+            'isfeatured' => $isFeatured,
+            'ispublic' => $isPublic,
+            'op' => $op,
+            'projectids' => $projectIds,
+        ));
+    }
+    
+    /**
+    * List template visibility and all accounts that have permissions to view this template.
+    *
+    * @param string $id the template ID
+    * @param string $page Pagination
+    */
+    
+    public function listIsoPermissions($id, $page = "") {
+
+        if (empty($id)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
+        }
+
+        return $this->request("listIsoPermissions", array(
+            'id' => $id,
+            'page' => $page,
+        ));
+    }
+    
+    /**
+    * Extracts an ISO
+    *
+    * @param string $id the ID of the ISO file
+    * @param string $mode the mode of extraction - HTTP_DOWNLOAD or FTP_UPLOAD
+    * @param string $url the url to which the ISO would be extracted
+    * @param string $zoneId the ID of the zone where the ISO is originally located
+    */
+    
+    public function extractIso($id, $mode, $url = "", $zoneId = "") {
+
+        if (empty($id)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
+        }
+
+        if (empty($mode)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "mode"), MISSING_ARGUMENT);
+        }
+
+        return $this->request("extractIso", array(
+            'id' => $id,
+            'mode' => $mode,
+            'url' => $url,
+            'zoneid' => $zoneId,
+        ));
+    }
+    
+    /**
     * Adds a new host.
     *
     * @param string $hypervisor hypervisor type of the host
     * @param string $password the password for the host
+    * @param string $podId the Pod ID for the host
     * @param string $url the host URL
     * @param string $userName the username for the host
     * @param string $zoneId the Zone ID for the host
@@ -4049,10 +4034,9 @@ class CloudStackClient extends BaseCloudStackClient {
     * @param string $clusterId the cluster ID for the host
     * @param string $clusterName the cluster name for the host
     * @param string $hostTags list of tags to be added to the host
-    * @param string $podId the Pod ID for the host
     */
     
-    public function addHost($hypervisor, $password, $url, $userName, $zoneId, $allocationState = "", $clusterId = "", $clusterName = "", $hostTags = "", $podId = "") {
+    public function addHost($hypervisor, $password, $podId, $url, $userName, $zoneId, $allocationState = "", $clusterId = "", $clusterName = "", $hostTags = "") {
 
         if (empty($hypervisor)) {
             throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "hypervisor"), MISSING_ARGUMENT);
@@ -4060,6 +4044,10 @@ class CloudStackClient extends BaseCloudStackClient {
 
         if (empty($password)) {
             throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "password"), MISSING_ARGUMENT);
+        }
+
+        if (empty($podId)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "podId"), MISSING_ARGUMENT);
         }
 
         if (empty($url)) {
@@ -4077,6 +4065,7 @@ class CloudStackClient extends BaseCloudStackClient {
         return $this->request("addHost", array(
             'hypervisor' => $hypervisor,
             'password' => $password,
+            'podid' => $podId,
             'url' => $url,
             'username' => $userName,
             'zoneid' => $zoneId,
@@ -4084,7 +4073,6 @@ class CloudStackClient extends BaseCloudStackClient {
             'clusterid' => $clusterId,
             'clustername' => $clusterName,
             'hosttags' => $hostTags,
-            'podid' => $podId,
         ));
     }
     
@@ -4195,6 +4183,7 @@ class CloudStackClient extends BaseCloudStackClient {
     * @param string $clusterId lists hosts existing in particular cluster
     * @param string $details comma separated list of host details requested, value can
     *         be a list of [ min, all, capacity, events, stats]
+    * @param string $haHost if true, list only hosts dedicated to HA
     * @param string $id the id of the host
     * @param string $keyword List by keyword
     * @param string $name the name of the host
@@ -4213,11 +4202,12 @@ class CloudStackClient extends BaseCloudStackClient {
     * @param string $page Pagination
     */
     
-    public function listHosts($clusterId = "", $details = "", $id = "", $keyword = "", $name = "", $page = "", $pageSize = "", $podId = "", $resourceState = "", $state = "", $type = "", $virtualMachineId = "", $zoneId = "", $page = "") {
+    public function listHosts($clusterId = "", $details = "", $haHost = "", $id = "", $keyword = "", $name = "", $page = "", $pageSize = "", $podId = "", $resourceState = "", $state = "", $type = "", $virtualMachineId = "", $zoneId = "", $page = "") {
 
         return $this->request("listHosts", array(
             'clusterid' => $clusterId,
             'details' => $details,
+            'hahost' => $haHost,
             'id' => $id,
             'keyword' => $keyword,
             'name' => $name,
@@ -4544,51 +4534,53 @@ class CloudStackClient extends BaseCloudStackClient {
     }
     
     /**
-    * Lists storage pools.
+    * Attaches a disk volume to a virtual machine.
     *
-    * @param string $clusterId list storage pools belongig to the specific cluster
-    * @param string $id the ID of the storage pool
-    * @param string $ipAddress the IP address for the storage pool
-    * @param string $keyword List by keyword
-    * @param string $name the name of the storage pool
-    * @param string $page 
-    * @param string $pageSize 
-    * @param string $path the storage pool path
-    * @param string $podId the Pod ID for the storage pool
-    * @param string $zoneId the Zone ID for the storage pool
-    * @param string $page Pagination
+    * @param string $id the ID of the disk volume
+    * @param string $virtualMachineId the ID of the virtual machine
+    * @param string $deviceId the ID of the device to map the volume to within the gue
+    *        st OS. If no deviceId is passed in, the next available deviceId will be chosen. 
+    *        Possible values for a Linux OS are:* 1 - /dev/xvdb* 2 - /dev/xvdc* 4 - /dev/xvde
+    *        * 5 - /dev/xvdf* 6 - /dev/xvdg* 7 - /dev/xvdh* 8 - /dev/xvdi* 9 - /dev/xvdj
     */
     
-    public function listStoragePools($clusterId = "", $id = "", $ipAddress = "", $keyword = "", $name = "", $page = "", $pageSize = "", $path = "", $podId = "", $zoneId = "", $page = "") {
+    public function attachVolume($id, $virtualMachineId, $deviceId = "") {
 
-        return $this->request("listStoragePools", array(
-            'clusterid' => $clusterId,
+        if (empty($id)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
+        }
+
+        if (empty($virtualMachineId)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "virtualMachineId"), MISSING_ARGUMENT);
+        }
+
+        return $this->request("attachVolume", array(
             'id' => $id,
-            'ipaddress' => $ipAddress,
-            'keyword' => $keyword,
-            'name' => $name,
-            'page' => $page,
-            'pagesize' => $pageSize,
-            'path' => $path,
-            'podid' => $podId,
-            'zoneid' => $zoneId,
-            'page' => $page,
+            'virtualmachineid' => $virtualMachineId,
+            'deviceid' => $deviceId,
         ));
     }
     
     /**
-    * Creates a storage pool.
+    * Uploads a data disk.
     *
-    * @param string $name the name for the storage pool
-    * @param string $url the URL of the storage pool
-    * @param string $zoneId the Zone ID for the storage pool
-    * @param string $clusterId the cluster ID for the storage pool
-    * @param string $details the details for the storage pool
-    * @param string $podId the Pod ID for the storage pool
-    * @param string $tags the tags for the storage pool
+    * @param string $format the format for the volume. Possible values include QCOW2, 
+    *        OVA, and VHD.
+    * @param string $name the name of the volume
+    * @param string $url the URL of where the volume is hosted. Possible URL include h
+    *        ttp:// and https://
+    * @param string $zoneId the ID of the zone the volume is to be hosted on
+    * @param string $account an optional accountName. Must be used with domainId.
+    * @param string $checksum the MD5 checksum value of this volume
+    * @param string $domainId an optional domainId. If the account parameter is used, 
+    *        domainId must also be used.
     */
     
-    public function createStoragePool($name, $url, $zoneId, $clusterId = "", $details = "", $podId = "", $tags = "") {
+    public function uploadVolume($format, $name, $url, $zoneId, $account = "", $checksum = "", $domainId = "") {
+
+        if (empty($format)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "format"), MISSING_ARGUMENT);
+        }
 
         if (empty($name)) {
             throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "name"), MISSING_ARGUMENT);
@@ -4602,126 +4594,343 @@ class CloudStackClient extends BaseCloudStackClient {
             throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "zoneId"), MISSING_ARGUMENT);
         }
 
-        return $this->request("createStoragePool", array(
+        return $this->request("uploadVolume", array(
+            'format' => $format,
             'name' => $name,
             'url' => $url,
             'zoneid' => $zoneId,
-            'clusterid' => $clusterId,
-            'details' => $details,
-            'podid' => $podId,
-            'tags' => $tags,
+            'account' => $account,
+            'checksum' => $checksum,
+            'domainid' => $domainId,
         ));
     }
     
     /**
-    * Updates a storage pool.
+    * Detaches a disk volume from a virtual machine.
     *
-    * @param string $id the Id of the storage pool
-    * @param string $tags comma-separated list of tags for the storage pool
+    * @param string $deviceId the device ID on the virtual machine where volume is det
+    *        ached from
+    * @param string $id the ID of the disk volume
+    * @param string $virtualMachineId the ID of the virtual machine where the volume i
+    *        s detached from
     */
     
-    public function updateStoragePool($id, $tags = "") {
+    public function detachVolume($deviceId = "", $id = "", $virtualMachineId = "") {
 
-        if (empty($id)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
-        }
-
-        return $this->request("updateStoragePool", array(
+        return $this->request("detachVolume", array(
+            'deviceid' => $deviceId,
             'id' => $id,
-            'tags' => $tags,
+            'virtualmachineid' => $virtualMachineId,
         ));
     }
     
     /**
-    * Deletes a storage pool.
+    * Creates a disk volume from a disk offering. This disk volume must still be attached to a virtual machine to make use of it.
     *
-    * @param string $id Storage pool id
+    * @param string $name the name of the disk volume
+    * @param string $account the account associated with the disk volume. Must be used
+    *         with the domainId parameter.
+    * @param string $diskOfferingId the ID of the disk offering. Either diskOfferingId
+    *         or snapshotId must be passed in.
+    * @param string $domainId the domain ID associated with the disk offering. If used
+    *         with the account parameter returns the disk volume associated with the account 
+    *        for the specified domain.
+    * @param string $projectId the project associated with the volume. Mutually exclus
+    *        ive with account parameter
+    * @param string $size Arbitrary volume size
+    * @param string $snapshotId the snapshot ID for the disk volume. Either diskOfferi
+    *        ngId or snapshotId must be passed in.
+    * @param string $zoneId the ID of the availability zone
     */
     
-    public function deleteStoragePool($id) {
-
-        if (empty($id)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
-        }
-
-        return $this->request("deleteStoragePool", array(
-            'id' => $id,
-        ));
-    }
-    
-    /**
-    * Create a pool
-    *
-    * @param string $algorithm algorithm.
-    * @param string $name pool name.
-    */
-    
-    public function createPool($algorithm, $name) {
-
-        if (empty($algorithm)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "algorithm"), MISSING_ARGUMENT);
-        }
+    public function createVolume($name, $account = "", $diskOfferingId = "", $domainId = "", $projectId = "", $size = "", $snapshotId = "", $zoneId = "") {
 
         if (empty($name)) {
             throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "name"), MISSING_ARGUMENT);
         }
 
-        return $this->request("createPool", array(
-            'algorithm' => $algorithm,
+        return $this->request("createVolume", array(
             'name' => $name,
+            'account' => $account,
+            'diskofferingid' => $diskOfferingId,
+            'domainid' => $domainId,
+            'projectid' => $projectId,
+            'size' => $size,
+            'snapshotid' => $snapshotId,
+            'zoneid' => $zoneId,
         ));
     }
     
     /**
-    * Delete a pool
+    * Deletes a detached disk volume.
     *
-    * @param string $poolName pool name.
+    * @param string $id The ID of the disk volume
     */
     
-    public function deletePool($poolName) {
+    public function deleteVolume($id) {
 
-        if (empty($poolName)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "poolName"), MISSING_ARGUMENT);
+        if (empty($id)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
         }
 
-        return $this->request("deletePool", array(
-            'poolname' => $poolName,
+        return $this->request("deleteVolume", array(
+            'id' => $id,
         ));
     }
     
     /**
-    * Modify pool
+    * Lists all volumes.
     *
-    * @param string $algorithm algorithm.
-    * @param string $poolName pool name.
-    */
-    
-    public function modifyPool($algorithm, $poolName) {
-
-        if (empty($algorithm)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "algorithm"), MISSING_ARGUMENT);
-        }
-
-        if (empty($poolName)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "poolName"), MISSING_ARGUMENT);
-        }
-
-        return $this->request("modifyPool", array(
-            'algorithm' => $algorithm,
-            'poolname' => $poolName,
-        ));
-    }
-    
-    /**
-    * List Pool
-    *
+    * @param string $account List resources by account. Must be used with the domainId
+    *         parameter.
+    * @param string $domainId list only resources belonging to the domain specified
+    * @param string $hostId list volumes on specified host
+    * @param string $id the ID of the disk volume
+    * @param string $isRecursive defaults to false, but if true, lists all resources f
+    *        rom the parent specified by the domainId till leaves.
+    * @param string $keyword List by keyword
+    * @param string $listAll If set to false, list only resources belonging to the com
+    *        mand&#039;s caller; if set to true - list resources that the caller is authorize
+    *        d to see. Default value is false
+    * @param string $name the name of the disk volume
+    * @param string $page 
+    * @param string $pageSize 
+    * @param string $podId the pod id the disk volume belongs to
+    * @param string $projectId list objects by project
+    * @param string $tags List resources by tags (key/value pairs)
+    * @param string $type the type of disk volume
+    * @param string $virtualMachineId the ID of the virtual machine
+    * @param string $zoneId the ID of the availability zone
     * @param string $page Pagination
     */
     
-    public function listPools($page = "") {
+    public function listVolumes($account = "", $domainId = "", $hostId = "", $id = "", $isRecursive = "", $keyword = "", $listAll = "", $name = "", $page = "", $pageSize = "", $podId = "", $projectId = "", $tags = "", $type = "", $virtualMachineId = "", $zoneId = "", $page = "") {
 
-        return $this->request("listPools", array(
+        return $this->request("listVolumes", array(
+            'account' => $account,
+            'domainid' => $domainId,
+            'hostid' => $hostId,
+            'id' => $id,
+            'isrecursive' => $isRecursive,
+            'keyword' => $keyword,
+            'listall' => $listAll,
+            'name' => $name,
             'page' => $page,
+            'pagesize' => $pageSize,
+            'podid' => $podId,
+            'projectid' => $projectId,
+            'tags' => $tags,
+            'type' => $type,
+            'virtualmachineid' => $virtualMachineId,
+            'zoneid' => $zoneId,
+            'page' => $page,
+        ));
+    }
+    
+    /**
+    * Extracts volume
+    *
+    * @param string $id the ID of the volume
+    * @param string $mode the mode of extraction - HTTP_DOWNLOAD or FTP_UPLOAD
+    * @param string $zoneId the ID of the zone where the volume is located
+    * @param string $url the url to which the volume would be extracted
+    */
+    
+    public function extractVolume($id, $mode, $zoneId, $url = "") {
+
+        if (empty($id)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
+        }
+
+        if (empty($mode)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "mode"), MISSING_ARGUMENT);
+        }
+
+        if (empty($zoneId)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "zoneId"), MISSING_ARGUMENT);
+        }
+
+        return $this->request("extractVolume", array(
+            'id' => $id,
+            'mode' => $mode,
+            'zoneid' => $zoneId,
+            'url' => $url,
+        ));
+    }
+    
+    /**
+    * Migrate volume
+    *
+    * @param string $storageId destination storage pool ID to migrate the volume to
+    * @param string $volumeId the ID of the volume
+    */
+    
+    public function migrateVolume($storageId, $volumeId) {
+
+        if (empty($storageId)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "storageId"), MISSING_ARGUMENT);
+        }
+
+        if (empty($volumeId)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "volumeId"), MISSING_ARGUMENT);
+        }
+
+        return $this->request("migrateVolume", array(
+            'storageid' => $storageId,
+            'volumeid' => $volumeId,
+        ));
+    }
+    
+    /**
+    * Starts a system virtual machine.
+    *
+    * @param string $id The ID of the system virtual machine
+    */
+    
+    public function startSystemVm($id) {
+
+        if (empty($id)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
+        }
+
+        return $this->request("startSystemVm", array(
+            'id' => $id,
+        ));
+    }
+    
+    /**
+    * Reboots a system VM.
+    *
+    * @param string $id The ID of the system virtual machine
+    */
+    
+    public function rebootSystemVm($id) {
+
+        if (empty($id)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
+        }
+
+        return $this->request("rebootSystemVm", array(
+            'id' => $id,
+        ));
+    }
+    
+    /**
+    * Stops a system VM.
+    *
+    * @param string $id The ID of the system virtual machine
+    * @param string $forced Force stop the VM.  The caller knows the VM is stopped.
+    */
+    
+    public function stopSystemVm($id, $forced = "") {
+
+        if (empty($id)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
+        }
+
+        return $this->request("stopSystemVm", array(
+            'id' => $id,
+            'forced' => $forced,
+        ));
+    }
+    
+    /**
+    * Destroyes a system virtual machine.
+    *
+    * @param string $id The ID of the system virtual machine
+    */
+    
+    public function destroySystemVm($id) {
+
+        if (empty($id)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
+        }
+
+        return $this->request("destroySystemVm", array(
+            'id' => $id,
+        ));
+    }
+    
+    /**
+    * List system virtual machines.
+    *
+    * @param string $hostId the host ID of the system VM
+    * @param string $id the ID of the system VM
+    * @param string $keyword List by keyword
+    * @param string $name the name of the system VM
+    * @param string $page 
+    * @param string $pageSize 
+    * @param string $podId the Pod ID of the system VM
+    * @param string $state the state of the system VM
+    * @param string $storageId the storage ID where vm&#039;s volumes belong to
+    * @param string $systemVmType the system VM type. Possible types are &quot;console
+    *        proxy&quot; and &quot;secondarystoragevm&quot;.
+    * @param string $zoneId the Zone ID of the system VM
+    * @param string $page Pagination
+    */
+    
+    public function listSystemVms($hostId = "", $id = "", $keyword = "", $name = "", $page = "", $pageSize = "", $podId = "", $state = "", $storageId = "", $systemVmType = "", $zoneId = "", $page = "") {
+
+        return $this->request("listSystemVms", array(
+            'hostid' => $hostId,
+            'id' => $id,
+            'keyword' => $keyword,
+            'name' => $name,
+            'page' => $page,
+            'pagesize' => $pageSize,
+            'podid' => $podId,
+            'state' => $state,
+            'storageid' => $storageId,
+            'systemvmtype' => $systemVmType,
+            'zoneid' => $zoneId,
+            'page' => $page,
+        ));
+    }
+    
+    /**
+    * Attempts Migration of a system virtual machine to the host specified.
+    *
+    * @param string $hostId destination Host ID to migrate VM to
+    * @param string $virtualMachineId the ID of the virtual machine
+    */
+    
+    public function migrateSystemVm($hostId, $virtualMachineId) {
+
+        if (empty($hostId)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "hostId"), MISSING_ARGUMENT);
+        }
+
+        if (empty($virtualMachineId)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "virtualMachineId"), MISSING_ARGUMENT);
+        }
+
+        return $this->request("migrateSystemVm", array(
+            'hostid' => $hostId,
+            'virtualmachineid' => $virtualMachineId,
+        ));
+    }
+    
+    /**
+    * Changes the service offering for a system vm (console proxy or secondary storage). The system vm must be in a "Stopped" state for this command to take effect.
+    *
+    * @param string $id The ID of the system vm
+    * @param string $serviceOfferingId the service offering ID to apply to the system 
+    *        vm
+    */
+    
+    public function changeServiceForSystemVm($id, $serviceOfferingId) {
+
+        if (empty($id)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
+        }
+
+        if (empty($serviceOfferingId)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "serviceOfferingId"), MISSING_ARGUMENT);
+        }
+
+        return $this->request("changeServiceForSystemVm", array(
+            'id' => $id,
+            'serviceofferingid' => $serviceOfferingId,
         ));
     }
     
@@ -4903,13 +5112,14 @@ class CloudStackClient extends BaseCloudStackClient {
     *        d to see. Default value is false
     * @param string $page 
     * @param string $pageSize 
-    * @param string $projectId list firewall rules by project
+    * @param string $projectId list objects by project
     * @param string $securityGroupName lists security groups by name
+    * @param string $tags List resources by tags (key/value pairs)
     * @param string $virtualMachineId lists security groups by virtual machine id
     * @param string $page Pagination
     */
     
-    public function listSecurityGroups($account = "", $domainId = "", $id = "", $isRecursive = "", $keyword = "", $listAll = "", $page = "", $pageSize = "", $projectId = "", $securityGroupName = "", $virtualMachineId = "", $page = "") {
+    public function listSecurityGroups($account = "", $domainId = "", $id = "", $isRecursive = "", $keyword = "", $listAll = "", $page = "", $pageSize = "", $projectId = "", $securityGroupName = "", $tags = "", $virtualMachineId = "", $page = "") {
 
         return $this->request("listSecurityGroups", array(
             'account' => $account,
@@ -4922,135 +5132,152 @@ class CloudStackClient extends BaseCloudStackClient {
             'pagesize' => $pageSize,
             'projectid' => $projectId,
             'securitygroupname' => $securityGroupName,
+            'tags' => $tags,
             'virtualmachineid' => $virtualMachineId,
             'page' => $page,
         ));
     }
     
     /**
-    * Starts a system virtual machine.
+    * Lists storage pools.
     *
-    * @param string $id The ID of the system virtual machine
-    */
-    
-    public function startSystemVm($id) {
-
-        if (empty($id)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
-        }
-
-        return $this->request("startSystemVm", array(
-            'id' => $id,
-        ));
-    }
-    
-    /**
-    * Reboots a system VM.
-    *
-    * @param string $id The ID of the system virtual machine
-    */
-    
-    public function rebootSystemVm($id) {
-
-        if (empty($id)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
-        }
-
-        return $this->request("rebootSystemVm", array(
-            'id' => $id,
-        ));
-    }
-    
-    /**
-    * Stops a system VM.
-    *
-    * @param string $id The ID of the system virtual machine
-    * @param string $forced Force stop the VM.  The caller knows the VM is stopped.
-    */
-    
-    public function stopSystemVm($id, $forced = "") {
-
-        if (empty($id)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
-        }
-
-        return $this->request("stopSystemVm", array(
-            'id' => $id,
-            'forced' => $forced,
-        ));
-    }
-    
-    /**
-    * Destroyes a system virtual machine.
-    *
-    * @param string $id The ID of the system virtual machine
-    */
-    
-    public function destroySystemVm($id) {
-
-        if (empty($id)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
-        }
-
-        return $this->request("destroySystemVm", array(
-            'id' => $id,
-        ));
-    }
-    
-    /**
-    * List system virtual machines.
-    *
-    * @param string $hostId the host ID of the system VM
-    * @param string $id the ID of the system VM
+    * @param string $clusterId list storage pools belongig to the specific cluster
+    * @param string $id the ID of the storage pool
+    * @param string $ipAddress the IP address for the storage pool
     * @param string $keyword List by keyword
-    * @param string $name the name of the system VM
+    * @param string $name the name of the storage pool
     * @param string $page 
     * @param string $pageSize 
-    * @param string $podId the Pod ID of the system VM
-    * @param string $state the state of the system VM
-    * @param string $systemVmType the system VM type. Possible types are &quot;console
-    *        proxy&quot; and &quot;secondarystoragevm&quot;.
-    * @param string $zoneId the Zone ID of the system VM
+    * @param string $path the storage pool path
+    * @param string $podId the Pod ID for the storage pool
+    * @param string $zoneId the Zone ID for the storage pool
     * @param string $page Pagination
     */
     
-    public function listSystemVms($hostId = "", $id = "", $keyword = "", $name = "", $page = "", $pageSize = "", $podId = "", $state = "", $systemVmType = "", $zoneId = "", $page = "") {
+    public function listStoragePools($clusterId = "", $id = "", $ipAddress = "", $keyword = "", $name = "", $page = "", $pageSize = "", $path = "", $podId = "", $zoneId = "", $page = "") {
 
-        return $this->request("listSystemVms", array(
-            'hostid' => $hostId,
+        return $this->request("listStoragePools", array(
+            'clusterid' => $clusterId,
             'id' => $id,
+            'ipaddress' => $ipAddress,
             'keyword' => $keyword,
             'name' => $name,
             'page' => $page,
             'pagesize' => $pageSize,
+            'path' => $path,
             'podid' => $podId,
-            'state' => $state,
-            'systemvmtype' => $systemVmType,
             'zoneid' => $zoneId,
             'page' => $page,
         ));
     }
     
     /**
-    * Attempts Migration of a system virtual machine to the host specified.
+    * Creates a storage pool.
     *
-    * @param string $hostId destination Host ID to migrate VM to
-    * @param string $virtualMachineId the ID of the virtual machine
+    * @param string $name the name for the storage pool
+    * @param string $url the URL of the storage pool
+    * @param string $zoneId the Zone ID for the storage pool
+    * @param string $clusterId the cluster ID for the storage pool
+    * @param string $details the details for the storage pool
+    * @param string $podId the Pod ID for the storage pool
+    * @param string $tags the tags for the storage pool
     */
     
-    public function migrateSystemVm($hostId, $virtualMachineId) {
+    public function createStoragePool($name, $url, $zoneId, $clusterId = "", $details = "", $podId = "", $tags = "") {
 
-        if (empty($hostId)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "hostId"), MISSING_ARGUMENT);
+        if (empty($name)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "name"), MISSING_ARGUMENT);
         }
 
-        if (empty($virtualMachineId)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "virtualMachineId"), MISSING_ARGUMENT);
+        if (empty($url)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "url"), MISSING_ARGUMENT);
         }
 
-        return $this->request("migrateSystemVm", array(
-            'hostid' => $hostId,
-            'virtualmachineid' => $virtualMachineId,
+        if (empty($zoneId)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "zoneId"), MISSING_ARGUMENT);
+        }
+
+        return $this->request("createStoragePool", array(
+            'name' => $name,
+            'url' => $url,
+            'zoneid' => $zoneId,
+            'clusterid' => $clusterId,
+            'details' => $details,
+            'podid' => $podId,
+            'tags' => $tags,
+        ));
+    }
+    
+    /**
+    * Updates a storage pool.
+    *
+    * @param string $id the Id of the storage pool
+    * @param string $tags comma-separated list of tags for the storage pool
+    */
+    
+    public function updateStoragePool($id, $tags = "") {
+
+        if (empty($id)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
+        }
+
+        return $this->request("updateStoragePool", array(
+            'id' => $id,
+            'tags' => $tags,
+        ));
+    }
+    
+    /**
+    * Deletes a storage pool.
+    *
+    * @param string $id Storage pool id
+    * @param string $forced Force destroy storage pool (force expunge volumes in Destr
+    *        oyed state as a part of pool removal)
+    */
+    
+    public function deleteStoragePool($id, $forced = "") {
+
+        if (empty($id)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
+        }
+
+        return $this->request("deleteStoragePool", array(
+            'id' => $id,
+            'forced' => $forced,
+        ));
+    }
+    
+    /**
+    * Puts storage pool into maintenance state
+    *
+    * @param string $id Primary storage ID
+    */
+    
+    public function enableStorageMaintenance($id) {
+
+        if (empty($id)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
+        }
+
+        return $this->request("enableStorageMaintenance", array(
+            'id' => $id,
+        ));
+    }
+    
+    /**
+    * Cancels maintenance for primary storage
+    *
+    * @param string $id the primary storage ID
+    */
+    
+    public function cancelStorageMaintenance($id) {
+
+        if (empty($id)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
+        }
+
+        return $this->request("cancelStorageMaintenance", array(
+            'id' => $id,
         ));
     }
     
@@ -5098,13 +5325,14 @@ class CloudStackClient extends BaseCloudStackClient {
     * @param string $name lists snapshot by snapshot name
     * @param string $page 
     * @param string $pageSize 
-    * @param string $projectId list firewall rules by project
+    * @param string $projectId list objects by project
     * @param string $snapshotType valid values are MANUAL or RECURRING.
+    * @param string $tags List resources by tags (key/value pairs)
     * @param string $volumeId the ID of the disk volume
     * @param string $page Pagination
     */
     
-    public function listSnapshots($account = "", $domainId = "", $id = "", $intervalType = "", $isRecursive = "", $keyword = "", $listAll = "", $name = "", $page = "", $pageSize = "", $projectId = "", $snapshotType = "", $volumeId = "", $page = "") {
+    public function listSnapshots($account = "", $domainId = "", $id = "", $intervalType = "", $isRecursive = "", $keyword = "", $listAll = "", $name = "", $page = "", $pageSize = "", $projectId = "", $snapshotType = "", $tags = "", $volumeId = "", $page = "") {
 
         return $this->request("listSnapshots", array(
             'account' => $account,
@@ -5119,6 +5347,7 @@ class CloudStackClient extends BaseCloudStackClient {
             'pagesize' => $pageSize,
             'projectid' => $projectId,
             'snapshottype' => $snapshotType,
+            'tags' => $tags,
             'volumeid' => $volumeId,
             'page' => $page,
         ));
@@ -5226,107 +5455,382 @@ class CloudStackClient extends BaseCloudStackClient {
     }
     
     /**
-    * Create a LUN from a pool
+    * Lists all port forwarding rules for an IP address.
     *
-    * @param string $name pool name.
-    * @param string $size LUN size.
-    */
-    
-    public function createLunOnFiler($name, $size) {
-
-        if (empty($name)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "name"), MISSING_ARGUMENT);
-        }
-
-        if (empty($size)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "size"), MISSING_ARGUMENT);
-        }
-
-        return $this->request("createLunOnFiler", array(
-            'name' => $name,
-            'size' => $size,
-        ));
-    }
-    
-    /**
-    * Destroy a LUN
-    *
-    * @param string $path LUN path.
-    */
-    
-    public function destroyLunOnFiler($path) {
-
-        if (empty($path)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "path"), MISSING_ARGUMENT);
-        }
-
-        return $this->request("destroyLunOnFiler", array(
-            'path' => $path,
-        ));
-    }
-    
-    /**
-    * List LUN
-    *
-    * @param string $poolName pool name.
+    * @param string $account List resources by account. Must be used with the domainId
+    *         parameter.
+    * @param string $domainId list only resources belonging to the domain specified
+    * @param string $id Lists rule with the specified ID.
+    * @param string $ipAddressId the id of IP address of the port forwarding services
+    * @param string $isRecursive defaults to false, but if true, lists all resources f
+    *        rom the parent specified by the domainId till leaves.
+    * @param string $keyword List by keyword
+    * @param string $listAll If set to false, list only resources belonging to the com
+    *        mand&#039;s caller; if set to true - list resources that the caller is authorize
+    *        d to see. Default value is false
+    * @param string $page 
+    * @param string $pageSize 
+    * @param string $projectId list objects by project
+    * @param string $tags List resources by tags (key/value pairs)
     * @param string $page Pagination
     */
     
-    public function listLunsOnFiler($poolName, $page = "") {
+    public function listPortForwardingRules($account = "", $domainId = "", $id = "", $ipAddressId = "", $isRecursive = "", $keyword = "", $listAll = "", $page = "", $pageSize = "", $projectId = "", $tags = "", $page = "") {
 
-        if (empty($poolName)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "poolName"), MISSING_ARGUMENT);
-        }
-
-        return $this->request("listLunsOnFiler", array(
-            'poolname' => $poolName,
+        return $this->request("listPortForwardingRules", array(
+            'account' => $account,
+            'domainid' => $domainId,
+            'id' => $id,
+            'ipaddressid' => $ipAddressId,
+            'isrecursive' => $isRecursive,
+            'keyword' => $keyword,
+            'listall' => $listAll,
+            'page' => $page,
+            'pagesize' => $pageSize,
+            'projectid' => $projectId,
+            'tags' => $tags,
             'page' => $page,
         ));
     }
     
     /**
-    * Associate a LUN with a guest IQN
+    * Creates a port forwarding rule
     *
-    * @param string $iqn Guest IQN to which the LUN associate.
-    * @param string $name LUN name.
+    * @param string $ipAddressId the IP address id of the port forwarding rule
+    * @param string $privatePort the starting port of port forwarding rule&#039;s priv
+    *        ate port range
+    * @param string $protocol the protocol for the port fowarding rule. Valid values a
+    *        re TCP or UDP.
+    * @param string $publicPort the starting port of port forwarding rule&#039;s publi
+    *        c port range
+    * @param string $virtualMachineId the ID of the virtual machine for the port forwa
+    *        rding rule
+    * @param string $cidrList the cidr list to forward traffic from
+    * @param string $networkId The network of the vm the Port Forwarding rule will be 
+    *        created for. Required when public Ip address is not associated with any Guest ne
+    *        twork yet (VPC case)
+    * @param string $openFirewall if true, firewall rule for source/end pubic port is 
+    *        automatically created; if false - firewall rule has to be created explicitely. I
+    *        f not specified 1) defaulted to false when PF rule is being created for VPC gues
+    *        t network 2) in all other cases defaulted to true
     */
     
-    public function associateLun($iqn, $name) {
+    public function createPortForwardingRule($ipAddressId, $privatePort, $protocol, $publicPort, $virtualMachineId, $cidrList = "", $networkId = "", $openFirewall = "") {
 
-        if (empty($iqn)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "iqn"), MISSING_ARGUMENT);
+        if (empty($ipAddressId)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "ipAddressId"), MISSING_ARGUMENT);
+        }
+
+        if (empty($privatePort)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "privatePort"), MISSING_ARGUMENT);
+        }
+
+        if (empty($protocol)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "protocol"), MISSING_ARGUMENT);
+        }
+
+        if (empty($publicPort)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "publicPort"), MISSING_ARGUMENT);
+        }
+
+        if (empty($virtualMachineId)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "virtualMachineId"), MISSING_ARGUMENT);
+        }
+
+        return $this->request("createPortForwardingRule", array(
+            'ipaddressid' => $ipAddressId,
+            'privateport' => $privatePort,
+            'protocol' => $protocol,
+            'publicport' => $publicPort,
+            'virtualmachineid' => $virtualMachineId,
+            'cidrlist' => $cidrList,
+            'networkid' => $networkId,
+            'openfirewall' => $openFirewall,
+        ));
+    }
+    
+    /**
+    * Deletes a port forwarding rule
+    *
+    * @param string $id the ID of the port forwarding rule
+    */
+    
+    public function deletePortForwardingRule($id) {
+
+        if (empty($id)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
+        }
+
+        return $this->request("deletePortForwardingRule", array(
+            'id' => $id,
+        ));
+    }
+    
+    /**
+    * Creates a firewall rule for a given ip address
+    *
+    * @param string $ipAddressId the IP address id of the port forwarding rule
+    * @param string $protocol the protocol for the firewall rule. Valid values are TCP
+    *        /UDP/ICMP.
+    * @param string $cidrList the cidr list to forward traffic from
+    * @param string $endPort the ending port of firewall rule
+    * @param string $icmpCode error code for this icmp message
+    * @param string $icmpType type of the icmp message being sent
+    * @param string $startPort the starting port of firewall rule
+    * @param string $type type of firewallrule: system/user
+    */
+    
+    public function createFirewallRule($ipAddressId, $protocol, $cidrList = "", $endPort = "", $icmpCode = "", $icmpType = "", $startPort = "", $type = "") {
+
+        if (empty($ipAddressId)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "ipAddressId"), MISSING_ARGUMENT);
+        }
+
+        if (empty($protocol)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "protocol"), MISSING_ARGUMENT);
+        }
+
+        return $this->request("createFirewallRule", array(
+            'ipaddressid' => $ipAddressId,
+            'protocol' => $protocol,
+            'cidrlist' => $cidrList,
+            'endport' => $endPort,
+            'icmpcode' => $icmpCode,
+            'icmptype' => $icmpType,
+            'startport' => $startPort,
+            'type' => $type,
+        ));
+    }
+    
+    /**
+    * Deletes a firewall rule
+    *
+    * @param string $id the ID of the firewall rule
+    */
+    
+    public function deleteFirewallRule($id) {
+
+        if (empty($id)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
+        }
+
+        return $this->request("deleteFirewallRule", array(
+            'id' => $id,
+        ));
+    }
+    
+    /**
+    * Lists all firewall rules for an IP address.
+    *
+    * @param string $account List resources by account. Must be used with the domainId
+    *         parameter.
+    * @param string $domainId list only resources belonging to the domain specified
+    * @param string $id Lists rule with the specified ID.
+    * @param string $ipAddressId the id of IP address of the firwall services
+    * @param string $isRecursive defaults to false, but if true, lists all resources f
+    *        rom the parent specified by the domainId till leaves.
+    * @param string $keyword List by keyword
+    * @param string $listAll If set to false, list only resources belonging to the com
+    *        mand&#039;s caller; if set to true - list resources that the caller is authorize
+    *        d to see. Default value is false
+    * @param string $page 
+    * @param string $pageSize 
+    * @param string $projectId list objects by project
+    * @param string $tags List resources by tags (key/value pairs)
+    * @param string $page Pagination
+    */
+    
+    public function listFirewallRules($account = "", $domainId = "", $id = "", $ipAddressId = "", $isRecursive = "", $keyword = "", $listAll = "", $page = "", $pageSize = "", $projectId = "", $tags = "", $page = "") {
+
+        return $this->request("listFirewallRules", array(
+            'account' => $account,
+            'domainid' => $domainId,
+            'id' => $id,
+            'ipaddressid' => $ipAddressId,
+            'isrecursive' => $isRecursive,
+            'keyword' => $keyword,
+            'listall' => $listAll,
+            'page' => $page,
+            'pagesize' => $pageSize,
+            'projectid' => $projectId,
+            'tags' => $tags,
+            'page' => $page,
+        ));
+    }
+    
+    /**
+    * Marks a default zone for this account
+    *
+    * @param string $account Name of the account that is to be marked.
+    * @param string $domainId Marks the account that belongs to the specified domain.
+    * @param string $zoneId The Zone ID with which the account is to be marked.
+    */
+    
+    public function markDefaultZoneForAccount($account, $domainId, $zoneId) {
+
+        if (empty($account)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "account"), MISSING_ARGUMENT);
+        }
+
+        if (empty($domainId)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "domainId"), MISSING_ARGUMENT);
+        }
+
+        if (empty($zoneId)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "zoneId"), MISSING_ARGUMENT);
+        }
+
+        return $this->request("markDefaultZoneForAccount", array(
+            'account' => $account,
+            'domainid' => $domainId,
+            'zoneid' => $zoneId,
+        ));
+    }
+    
+    /**
+    * Creates a Zone.
+    *
+    * @param string $dns1 the first DNS for the Zone
+    * @param string $internalDns1 the first internal DNS for the Zone
+    * @param string $name the name of the Zone
+    * @param string $networkType network type of the zone, can be Basic or Advanced
+    * @param string $allocationState Allocation state of this Zone for allocation of n
+    *        ew resources
+    * @param string $dns2 the second DNS for the Zone
+    * @param string $domain Network domain name for the networks in the zone
+    * @param string $domainId the ID of the containing domain, null for public zones
+    * @param string $guestCidrAddress the guest CIDR address for the Zone
+    * @param string $internalDns2 the second internal DNS for the Zone
+    * @param string $localStorageEnabled true if local storage offering enabled, false
+    *         otherwise
+    * @param string $securityGroupEnabled true if network is security group enabled, f
+    *        alse otherwise
+    */
+    
+    public function createZone($dns1, $internalDns1, $name, $networkType, $allocationState = "", $dns2 = "", $domain = "", $domainId = "", $guestCidrAddress = "", $internalDns2 = "", $localStorageEnabled = "", $securityGroupEnabled = "") {
+
+        if (empty($dns1)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "dns1"), MISSING_ARGUMENT);
+        }
+
+        if (empty($internalDns1)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "internalDns1"), MISSING_ARGUMENT);
         }
 
         if (empty($name)) {
             throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "name"), MISSING_ARGUMENT);
         }
 
-        return $this->request("associateLun", array(
-            'iqn' => $iqn,
+        if (empty($networkType)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "networkType"), MISSING_ARGUMENT);
+        }
+
+        return $this->request("createZone", array(
+            'dns1' => $dns1,
+            'internaldns1' => $internalDns1,
+            'name' => $name,
+            'networktype' => $networkType,
+            'allocationstate' => $allocationState,
+            'dns2' => $dns2,
+            'domain' => $domain,
+            'domainid' => $domainId,
+            'guestcidraddress' => $guestCidrAddress,
+            'internaldns2' => $internalDns2,
+            'localstorageenabled' => $localStorageEnabled,
+            'securitygroupenabled' => $securityGroupEnabled,
+        ));
+    }
+    
+    /**
+    * Updates a Zone.
+    *
+    * @param string $id the ID of the Zone
+    * @param string $allocationState Allocation state of this cluster for allocation o
+    *        f new resources
+    * @param string $details the details for the Zone
+    * @param string $dhcpProvider the dhcp Provider for the Zone
+    * @param string $dns1 the first DNS for the Zone
+    * @param string $dns2 the second DNS for the Zone
+    * @param string $dnsSearchOrder the dns search order list
+    * @param string $domain Network domain name for the networks in the zone; empty st
+    *        ring will update domain with NULL value
+    * @param string $guestCidrAddress the guest CIDR address for the Zone
+    * @param string $internalDns1 the first internal DNS for the Zone
+    * @param string $internalDns2 the second internal DNS for the Zone
+    * @param string $isPublic updates a private zone to public if set, but not vice-ve
+    *        rsa
+    * @param string $localStorageEnabled true if local storage offering enabled, false
+    *         otherwise
+    * @param string $name the name of the Zone
+    */
+    
+    public function updateZone($id, $allocationState = "", $details = "", $dhcpProvider = "", $dns1 = "", $dns2 = "", $dnsSearchOrder = "", $domain = "", $guestCidrAddress = "", $internalDns1 = "", $internalDns2 = "", $isPublic = "", $localStorageEnabled = "", $name = "") {
+
+        if (empty($id)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
+        }
+
+        return $this->request("updateZone", array(
+            'id' => $id,
+            'allocationstate' => $allocationState,
+            'details' => $details,
+            'dhcpprovider' => $dhcpProvider,
+            'dns1' => $dns1,
+            'dns2' => $dns2,
+            'dnssearchorder' => $dnsSearchOrder,
+            'domain' => $domain,
+            'guestcidraddress' => $guestCidrAddress,
+            'internaldns1' => $internalDns1,
+            'internaldns2' => $internalDns2,
+            'ispublic' => $isPublic,
+            'localstorageenabled' => $localStorageEnabled,
             'name' => $name,
         ));
     }
     
     /**
-    * Dissociate a LUN
+    * Deletes a Zone.
     *
-    * @param string $iqn Guest IQN.
-    * @param string $path LUN path.
+    * @param string $id the ID of the Zone
     */
     
-    public function dissociateLun($iqn, $path) {
+    public function deleteZone($id) {
 
-        if (empty($iqn)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "iqn"), MISSING_ARGUMENT);
+        if (empty($id)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
         }
 
-        if (empty($path)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "path"), MISSING_ARGUMENT);
-        }
+        return $this->request("deleteZone", array(
+            'id' => $id,
+        ));
+    }
+    
+    /**
+    * Lists zones
+    *
+    * @param string $available true if you want to retrieve all available Zones. False
+    *         if you only want to return the Zones from which you have at least one VM. Defau
+    *        lt is false.
+    * @param string $domainId the ID of the domain associated with the zone
+    * @param string $id the ID of the zone
+    * @param string $keyword List by keyword
+    * @param string $page 
+    * @param string $pageSize 
+    * @param string $showCapacities flag to display the capacity of the zones
+    * @param string $page Pagination
+    */
+    
+    public function listZones($available = "", $domainId = "", $id = "", $keyword = "", $page = "", $pageSize = "", $showCapacities = "", $page = "") {
 
-        return $this->request("dissociateLun", array(
-            'iqn' => $iqn,
-            'path' => $path,
+        return $this->request("listZones", array(
+            'available' => $available,
+            'domainid' => $domainId,
+            'id' => $id,
+            'keyword' => $keyword,
+            'page' => $page,
+            'pagesize' => $pageSize,
+            'showcapacities' => $showCapacities,
+            'page' => $page,
         ));
     }
     
@@ -5337,9 +5841,12 @@ class CloudStackClient extends BaseCloudStackClient {
     *         is being enabled
     * @param string $virtualMachineId the ID of the virtual machine for enabling stati
     *        c nat feature
+    * @param string $networkId The network of the vm the static nat will be enabled fo
+    *        r. Required when public Ip address is not associated with any Guest network yet 
+    *        (VPC case)
     */
     
-    public function enableStaticNat($ipAddressId, $virtualMachineId) {
+    public function enableStaticNat($ipAddressId, $virtualMachineId, $networkId = "") {
 
         if (empty($ipAddressId)) {
             throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "ipAddressId"), MISSING_ARGUMENT);
@@ -5352,6 +5859,7 @@ class CloudStackClient extends BaseCloudStackClient {
         return $this->request("enableStaticNat", array(
             'ipaddressid' => $ipAddressId,
             'virtualmachineid' => $virtualMachineId,
+            'networkid' => $networkId,
         ));
     }
     
@@ -5426,7 +5934,7 @@ class CloudStackClient extends BaseCloudStackClient {
     *        d to see. Default value is false
     * @param string $page 
     * @param string $pageSize 
-    * @param string $projectId list firewall rules by project
+    * @param string $projectId list objects by project
     * @param string $virtualMachineId Lists all rules applied to the specified Vm.
     * @param string $page Pagination
     */
@@ -5591,142 +6099,98 @@ class CloudStackClient extends BaseCloudStackClient {
     }
     
     /**
-    * Creates a Zone.
+    * Updates a configuration.
     *
-    * @param string $dns1 the first DNS for the Zone
-    * @param string $internalDns1 the first internal DNS for the Zone
-    * @param string $name the name of the Zone
-    * @param string $networkType network type of the zone, can be Basic or Advanced
-    * @param string $allocationState Allocation state of this Zone for allocation of n
-    *        ew resources
-    * @param string $dns2 the second DNS for the Zone
-    * @param string $domain Network domain name for the networks in the zone
-    * @param string $domainId the ID of the containing domain, null for public zones
-    * @param string $guestCidrAddress the guest CIDR address for the Zone
-    * @param string $internalDns2 the second internal DNS for the Zone
-    * @param string $securityGroupEnabled true if network is security group enabled, f
-    *        alse otherwise
+    * @param string $name the name of the configuration
+    * @param string $value the value of the configuration
     */
     
-    public function createZone($dns1, $internalDns1, $name, $networkType, $allocationState = "", $dns2 = "", $domain = "", $domainId = "", $guestCidrAddress = "", $internalDns2 = "", $securityGroupEnabled = "") {
-
-        if (empty($dns1)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "dns1"), MISSING_ARGUMENT);
-        }
-
-        if (empty($internalDns1)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "internalDns1"), MISSING_ARGUMENT);
-        }
+    public function updateConfiguration($name, $value = "") {
 
         if (empty($name)) {
             throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "name"), MISSING_ARGUMENT);
         }
 
-        if (empty($networkType)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "networkType"), MISSING_ARGUMENT);
-        }
-
-        return $this->request("createZone", array(
-            'dns1' => $dns1,
-            'internaldns1' => $internalDns1,
+        return $this->request("updateConfiguration", array(
             'name' => $name,
-            'networktype' => $networkType,
-            'allocationstate' => $allocationState,
-            'dns2' => $dns2,
-            'domain' => $domain,
-            'domainid' => $domainId,
-            'guestcidraddress' => $guestCidrAddress,
-            'internaldns2' => $internalDns2,
+            'value' => $value,
+        ));
+    }
+    
+    /**
+    * Lists all configurations.
+    *
+    * @param string $category lists configurations by category
+    * @param string $keyword List by keyword
+    * @param string $name lists configuration by name
+    * @param string $page 
+    * @param string $pageSize 
+    * @param string $page Pagination
+    */
+    
+    public function listConfigurations($category = "", $keyword = "", $name = "", $page = "", $pageSize = "", $page = "") {
+
+        return $this->request("listConfigurations", array(
+            'category' => $category,
+            'keyword' => $keyword,
+            'name' => $name,
+            'page' => $page,
+            'pagesize' => $pageSize,
+            'page' => $page,
+        ));
+    }
+    
+    /**
+    * Lists capabilities
+    *
+    * @param string $page Pagination
+    */
+    
+    public function listCapabilities($page = "") {
+
+        return $this->request("listCapabilities", array(
+            'page' => $page,
+        ));
+    }
+    
+    /**
+    * Updates a hypervisor capabilities.
+    *
+    * @param string $id ID of the hypervisor capability
+    * @param string $maxGuestsLimit the max number of Guest VMs per host for this hype
+    *        rvisor.
+    * @param string $securityGroupEnabled set true to enable security group for this h
+    *        ypervisor.
+    */
+    
+    public function updateHypervisorCapabilities($id = "", $maxGuestsLimit = "", $securityGroupEnabled = "") {
+
+        return $this->request("updateHypervisorCapabilities", array(
+            'id' => $id,
+            'maxguestslimit' => $maxGuestsLimit,
             'securitygroupenabled' => $securityGroupEnabled,
         ));
     }
     
     /**
-    * Updates a Zone.
+    * Lists all hypervisor capabilities.
     *
-    * @param string $id the ID of the Zone
-    * @param string $allocationState Allocation state of this cluster for allocation o
-    *        f new resources
-    * @param string $details the details for the Zone
-    * @param string $dhcpProvider the dhcp Provider for the Zone
-    * @param string $dns1 the first DNS for the Zone
-    * @param string $dns2 the second DNS for the Zone
-    * @param string $dnsSearchOrder the dns search order list
-    * @param string $domain Network domain name for the networks in the zone; empty st
-    *        ring will update domain with NULL value
-    * @param string $guestCidrAddress the guest CIDR address for the Zone
-    * @param string $internalDns1 the first internal DNS for the Zone
-    * @param string $internalDns2 the second internal DNS for the Zone
-    * @param string $isPublic updates a private zone to public if set, but not vice-ve
-    *        rsa
-    * @param string $name the name of the Zone
-    */
-    
-    public function updateZone($id, $allocationState = "", $details = "", $dhcpProvider = "", $dns1 = "", $dns2 = "", $dnsSearchOrder = "", $domain = "", $guestCidrAddress = "", $internalDns1 = "", $internalDns2 = "", $isPublic = "", $name = "") {
-
-        if (empty($id)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
-        }
-
-        return $this->request("updateZone", array(
-            'id' => $id,
-            'allocationstate' => $allocationState,
-            'details' => $details,
-            'dhcpprovider' => $dhcpProvider,
-            'dns1' => $dns1,
-            'dns2' => $dns2,
-            'dnssearchorder' => $dnsSearchOrder,
-            'domain' => $domain,
-            'guestcidraddress' => $guestCidrAddress,
-            'internaldns1' => $internalDns1,
-            'internaldns2' => $internalDns2,
-            'ispublic' => $isPublic,
-            'name' => $name,
-        ));
-    }
-    
-    /**
-    * Deletes a Zone.
-    *
-    * @param string $id the ID of the Zone
-    */
-    
-    public function deleteZone($id) {
-
-        if (empty($id)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
-        }
-
-        return $this->request("deleteZone", array(
-            'id' => $id,
-        ));
-    }
-    
-    /**
-    * Lists zones
-    *
-    * @param string $available true if you want to retrieve all available Zones. False
-    *         if you only want to return the Zones from which you have at least one VM. Defau
-    *        lt is false.
-    * @param string $domainId the ID of the domain associated with the zone
-    * @param string $id the ID of the zone
+    * @param string $hypervisor the hypervisor for which to restrict the search
+    * @param string $id ID of the hypervisor capability
     * @param string $keyword List by keyword
     * @param string $page 
     * @param string $pageSize 
-    * @param string $showCapacities flag to display the capacity of the zones
     * @param string $page Pagination
     */
     
-    public function listZones($available = "", $domainId = "", $id = "", $keyword = "", $page = "", $pageSize = "", $showCapacities = "", $page = "") {
+    public function listHypervisorCapabilities($hypervisor = "", $id = "", $keyword = "", $page = "", $pageSize = "", $page = "") {
 
-        return $this->request("listZones", array(
-            'available' => $available,
-            'domainid' => $domainId,
+        return $this->request("listHypervisorCapabilities", array(
+            'hypervisor' => $hypervisor,
             'id' => $id,
             'keyword' => $keyword,
             'page' => $page,
             'pagesize' => $pageSize,
-            'showcapacities' => $showCapacities,
             'page' => $page,
         ));
     }
@@ -5807,7 +6271,7 @@ class CloudStackClient extends BaseCloudStackClient {
     * @param string $name list instance groups by name
     * @param string $page 
     * @param string $pageSize 
-    * @param string $projectId list firewall rules by project
+    * @param string $projectId list objects by project
     * @param string $page Pagination
     */
     
@@ -5969,6 +6433,202 @@ class CloudStackClient extends BaseCloudStackClient {
     }
     
     /**
+    * Registers an existing template into the CloudStack cloud.
+    *
+    * @param string $displayText the display text of the template. This is usually use
+    *        d for display purposes.
+    * @param string $format the format for the template. Possible values include QCOW2
+    *        , RAW, and VHD.
+    * @param string $hypervisor the target hypervisor for the template
+    * @param string $name the name of the template
+    * @param string $osTypeId the ID of the OS Type that best represents the OS of thi
+    *        s template.
+    * @param string $url the URL of where the template is hosted. Possible URL include
+    *         http:// and https://
+    * @param string $zoneId the ID of the zone the template is to be hosted on
+    * @param string $account an optional accountName. Must be used with domainId.
+    * @param string $bits 32 or 64 bits support. 64 by default
+    * @param string $checksum the MD5 checksum value of this template
+    * @param string $details Template details in key/value pairs.
+    * @param string $domainId an optional domainId. If the account parameter is used, 
+    *        domainId must also be used.
+    * @param string $isExtractable true if the template or its derivatives are extract
+    *        able; default is false
+    * @param string $isFeatured true if this template is a featured template, false ot
+    *        herwise
+    * @param string $isPublic true if the template is available to all accounts; defau
+    *        lt is true
+    * @param string $passwordEnabled true if the template supports the password reset 
+    *        feature; default is false
+    * @param string $projectId Register template for the project
+    * @param string $requireShvm true if this template requires HVM
+    * @param string $sshKeyEnabled true if the template supports the sshkey upload fea
+    *        ture; default is false
+    * @param string $templateTag the tag for this template.
+    */
+    
+    public function registerTemplate($displayText, $format, $hypervisor, $name, $osTypeId, $url, $zoneId, $account = "", $bits = "", $checksum = "", $details = "", $domainId = "", $isExtractable = "", $isFeatured = "", $isPublic = "", $passwordEnabled = "", $projectId = "", $requireShvm = "", $sshKeyEnabled = "", $templateTag = "") {
+
+        if (empty($displayText)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "displayText"), MISSING_ARGUMENT);
+        }
+
+        if (empty($format)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "format"), MISSING_ARGUMENT);
+        }
+
+        if (empty($hypervisor)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "hypervisor"), MISSING_ARGUMENT);
+        }
+
+        if (empty($name)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "name"), MISSING_ARGUMENT);
+        }
+
+        if (empty($osTypeId)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "osTypeId"), MISSING_ARGUMENT);
+        }
+
+        if (empty($url)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "url"), MISSING_ARGUMENT);
+        }
+
+        if (empty($zoneId)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "zoneId"), MISSING_ARGUMENT);
+        }
+
+        return $this->request("registerTemplate", array(
+            'displaytext' => $displayText,
+            'format' => $format,
+            'hypervisor' => $hypervisor,
+            'name' => $name,
+            'ostypeid' => $osTypeId,
+            'url' => $url,
+            'zoneid' => $zoneId,
+            'account' => $account,
+            'bits' => $bits,
+            'checksum' => $checksum,
+            'details' => $details,
+            'domainid' => $domainId,
+            'isextractable' => $isExtractable,
+            'isfeatured' => $isFeatured,
+            'ispublic' => $isPublic,
+            'passwordenabled' => $passwordEnabled,
+            'projectid' => $projectId,
+            'requireshvm' => $requireShvm,
+            'sshkeyenabled' => $sshKeyEnabled,
+            'templatetag' => $templateTag,
+        ));
+    }
+    
+    /**
+    * Registers an existing ISO into the CloudStack Cloud.
+    *
+    * @param string $displayText the display text of the ISO. This is usually used for
+    *         display purposes.
+    * @param string $name the name of the ISO
+    * @param string $url the URL to where the ISO is currently being hosted
+    * @param string $zoneId the ID of the zone you wish to register the ISO to.
+    * @param string $account an optional account name. Must be used with domainId.
+    * @param string $bootable true if this ISO is bootable. If not passed explicitly i
+    *        ts assumed to be true
+    * @param string $checksum the MD5 checksum value of this ISO
+    * @param string $domainId an optional domainId. If the account parameter is used, 
+    *        domainId must also be used.
+    * @param string $isExtractable true if the iso or its derivatives are extractable;
+    *         default is false
+    * @param string $isFeatured true if you want this ISO to be featured
+    * @param string $isPublic true if you want to register the ISO to be publicly avai
+    *        lable to all users, false otherwise.
+    * @param string $osTypeId the ID of the OS Type that best represents the OS of thi
+    *        s ISO. If the iso is bootable this parameter needs to be passed
+    * @param string $projectId Register iso for the project
+    */
+    
+    public function registerIso($displayText, $name, $url, $zoneId, $account = "", $bootable = "", $checksum = "", $domainId = "", $isExtractable = "", $isFeatured = "", $isPublic = "", $osTypeId = "", $projectId = "") {
+
+        if (empty($displayText)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "displayText"), MISSING_ARGUMENT);
+        }
+
+        if (empty($name)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "name"), MISSING_ARGUMENT);
+        }
+
+        if (empty($url)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "url"), MISSING_ARGUMENT);
+        }
+
+        if (empty($zoneId)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "zoneId"), MISSING_ARGUMENT);
+        }
+
+        return $this->request("registerIso", array(
+            'displaytext' => $displayText,
+            'name' => $name,
+            'url' => $url,
+            'zoneid' => $zoneId,
+            'account' => $account,
+            'bootable' => $bootable,
+            'checksum' => $checksum,
+            'domainid' => $domainId,
+            'isextractable' => $isExtractable,
+            'isfeatured' => $isFeatured,
+            'ispublic' => $isPublic,
+            'ostypeid' => $osTypeId,
+            'projectid' => $projectId,
+        ));
+    }
+    
+    /**
+    * This command allows a user to register for the developer API, returning a secret key and an API key. This request is made through the integration API port, so it is a privileged command and must be made on behalf of a user. It is up to the implementer just how the username and password are entered, and then how that translates to an integration API request. Both secret key and API key should be returned to the user
+    *
+    * @param string $id User id
+    */
+    
+    public function registerUserKeys($id) {
+
+        if (empty($id)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
+        }
+
+        return $this->request("registerUserKeys", array(
+            'id' => $id,
+        ));
+    }
+    
+    /**
+    * Register a public key in a keypair under a certain name
+    *
+    * @param string $name Name of the keypair
+    * @param string $publicKey Public key material of the keypair
+    * @param string $account an optional account for the ssh key. Must be used with do
+    *        mainId.
+    * @param string $domainId an optional domainId for the ssh key. If the account par
+    *        ameter is used, domainId must also be used.
+    * @param string $projectId an optional project for the ssh key
+    */
+    
+    public function registerSSHKeyPair($name, $publicKey, $account = "", $domainId = "", $projectId = "") {
+
+        if (empty($name)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "name"), MISSING_ARGUMENT);
+        }
+
+        if (empty($publicKey)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "publicKey"), MISSING_ARGUMENT);
+        }
+
+        return $this->request("registerSSHKeyPair", array(
+            'name' => $name,
+            'publickey' => $publicKey,
+            'account' => $account,
+            'domainid' => $domainId,
+            'projectid' => $projectId,
+        ));
+    }
+    
+    /**
     * Creates a new Pod.
     *
     * @param string $gateway the gateway for the Pod
@@ -6099,10 +6759,12 @@ class CloudStackClient extends BaseCloudStackClient {
     * @param string $diskSize size of the disk offering in GB
     * @param string $domainId the ID of the containing domain, null for public offerin
     *        gs
+    * @param string $storageType the storage type of the disk offering. Values are loc
+    *        al and shared.
     * @param string $tags tags for the disk offering
     */
     
-    public function createDiskOffering($displayText, $name, $customized = "", $diskSize = "", $domainId = "", $tags = "") {
+    public function createDiskOffering($displayText, $name, $customized = "", $diskSize = "", $domainId = "", $storageType = "", $tags = "") {
 
         if (empty($displayText)) {
             throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "displayText"), MISSING_ARGUMENT);
@@ -6118,6 +6780,7 @@ class CloudStackClient extends BaseCloudStackClient {
             'customized' => $customized,
             'disksize' => $diskSize,
             'domainid' => $domainId,
+            'storagetype' => $storageType,
             'tags' => $tags,
         ));
     }
@@ -6195,16 +6858,22 @@ class CloudStackClient extends BaseCloudStackClient {
     * @param string $clusterType type of the cluster: CloudManaged, ExternalManaged
     * @param string $hypervisor hypervisor type of the cluster: XenServer,KVM,VMware,H
     *        yperv,BareMetal,Simulator
+    * @param string $podId the Pod ID for the host
     * @param string $zoneId the Zone ID for the cluster
     * @param string $allocationState Allocation state of this cluster for allocation o
     *        f new resources
     * @param string $password the password for the host
-    * @param string $podId the Pod ID for the host
     * @param string $url the URL
     * @param string $userName the username for the cluster
+    * @param string $vsmIpAddress the ipaddress of the VSM associated with this cluste
+    *        r
+    * @param string $vsmPassword the password for the VSM associated with this cluster
+    *        
+    * @param string $vsmUsername the username for the VSM associated with this cluster
+    *        
     */
     
-    public function addCluster($clusterName, $clusterType, $hypervisor, $zoneId, $allocationState = "", $password = "", $podId = "", $url = "", $userName = "") {
+    public function addCluster($clusterName, $clusterType, $hypervisor, $podId, $zoneId, $allocationState = "", $password = "", $url = "", $userName = "", $vsmIpAddress = "", $vsmPassword = "", $vsmUsername = "") {
 
         if (empty($clusterName)) {
             throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "clusterName"), MISSING_ARGUMENT);
@@ -6218,6 +6887,10 @@ class CloudStackClient extends BaseCloudStackClient {
             throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "hypervisor"), MISSING_ARGUMENT);
         }
 
+        if (empty($podId)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "podId"), MISSING_ARGUMENT);
+        }
+
         if (empty($zoneId)) {
             throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "zoneId"), MISSING_ARGUMENT);
         }
@@ -6226,12 +6899,15 @@ class CloudStackClient extends BaseCloudStackClient {
             'clustername' => $clusterName,
             'clustertype' => $clusterType,
             'hypervisor' => $hypervisor,
+            'podid' => $podId,
             'zoneid' => $zoneId,
             'allocationstate' => $allocationState,
             'password' => $password,
-            'podid' => $podId,
             'url' => $url,
             'username' => $userName,
+            'vsmipaddress' => $vsmIpAddress,
+            'vsmpassword' => $vsmPassword,
+            'vsmusername' => $vsmUsername,
         ));
     }
     
@@ -6318,92 +6994,6 @@ class CloudStackClient extends BaseCloudStackClient {
     }
     
     /**
-    * Creates a l2tp/ipsec remote access vpn
-    *
-    * @param string $publicIpId public ip address id of the vpn server
-    * @param string $account an optional account for the VPN. Must be used with domain
-    *        Id.
-    * @param string $domainId an optional domainId for the VPN. If the account paramet
-    *        er is used, domainId must also be used.
-    * @param string $ipRange the range of ip addresses to allocate to vpn clients. The
-    *         first ip in the range will be taken by the vpn server
-    * @param string $openFirewall if true, firewall rule for source/end pubic port is 
-    *        automatically created; if false - firewall rule has to be created explicitely. H
-    *        as value true by default
-    */
-    
-    public function createRemoteAccessVpn($publicIpId, $account = "", $domainId = "", $ipRange = "", $openFirewall = "") {
-
-        if (empty($publicIpId)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "publicIpId"), MISSING_ARGUMENT);
-        }
-
-        return $this->request("createRemoteAccessVpn", array(
-            'publicipid' => $publicIpId,
-            'account' => $account,
-            'domainid' => $domainId,
-            'iprange' => $ipRange,
-            'openfirewall' => $openFirewall,
-        ));
-    }
-    
-    /**
-    * Destroys a l2tp/ipsec remote access vpn
-    *
-    * @param string $publicIpId public ip address id of the vpn server
-    */
-    
-    public function deleteRemoteAccessVpn($publicIpId) {
-
-        if (empty($publicIpId)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "publicIpId"), MISSING_ARGUMENT);
-        }
-
-        return $this->request("deleteRemoteAccessVpn", array(
-            'publicipid' => $publicIpId,
-        ));
-    }
-    
-    /**
-    * Lists remote access vpns
-    *
-    * @param string $publicIpId public ip address id of the vpn server
-    * @param string $account List resources by account. Must be used with the domainId
-    *         parameter.
-    * @param string $domainId list only resources belonging to the domain specified
-    * @param string $isRecursive defaults to false, but if true, lists all resources f
-    *        rom the parent specified by the domainId till leaves.
-    * @param string $keyword List by keyword
-    * @param string $listAll If set to false, list only resources belonging to the com
-    *        mand&#039;s caller; if set to true - list resources that the caller is authorize
-    *        d to see. Default value is false
-    * @param string $page 
-    * @param string $pageSize 
-    * @param string $projectId list firewall rules by project
-    * @param string $page Pagination
-    */
-    
-    public function listRemoteAccessVpns($publicIpId, $account = "", $domainId = "", $isRecursive = "", $keyword = "", $listAll = "", $page = "", $pageSize = "", $projectId = "", $page = "") {
-
-        if (empty($publicIpId)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "publicIpId"), MISSING_ARGUMENT);
-        }
-
-        return $this->request("listRemoteAccessVpns", array(
-            'publicipid' => $publicIpId,
-            'account' => $account,
-            'domainid' => $domainId,
-            'isrecursive' => $isRecursive,
-            'keyword' => $keyword,
-            'listall' => $listAll,
-            'page' => $page,
-            'pagesize' => $pageSize,
-            'projectid' => $projectId,
-            'page' => $page,
-        ));
-    }
-    
-    /**
     * Creates a VLAN IP range.
     *
     * @param string $startIp the beginning IP address in the VLAN IP range
@@ -6421,8 +7011,8 @@ class CloudStackClient extends BaseCloudStackClient {
     *        d vlan only.
     * @param string $projectId project who will own the VLAN. If VLAN is Zone wide, th
     *        is parameter should be ommited
-    * @param string $vlan the ID or VID of the VLAN. Default is an &quot;untagged&quot
-    *        ; VLAN.
+    * @param string $vlan the ID or VID of the VLAN. If not specified, will be default
+    *        ed to the vlan of the network or if vlan of the network is null - to Untagged
     * @param string $zoneId the Zone ID of the VLAN IP range
     */
     
@@ -6575,7 +7165,7 @@ class CloudStackClient extends BaseCloudStackClient {
     * @param string $name A key pair name to look for
     * @param string $page 
     * @param string $pageSize 
-    * @param string $projectId list firewall rules by project
+    * @param string $projectId list objects by project
     * @param string $page Pagination
     */
     
@@ -6592,6 +7182,106 @@ class CloudStackClient extends BaseCloudStackClient {
             'page' => $page,
             'pagesize' => $pageSize,
             'projectid' => $projectId,
+            'page' => $page,
+        ));
+    }
+    
+    /**
+    * Creates resource tag(s)
+    *
+    * @param string $resourceids list of resources to create the tags for
+    * @param string $resourceType type of the resource
+    * @param string $tags Map of tags (key/value pairs)
+    * @param string $customer identifies client specific tag. When the value is not nu
+    *        ll, the tag can&#039;t be used by cloudStack code internally
+    */
+    
+    public function createTags($resourceids, $resourceType, $tags, $customer = "") {
+
+        if (empty($resourceids)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "resourceids"), MISSING_ARGUMENT);
+        }
+
+        if (empty($resourceType)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "resourceType"), MISSING_ARGUMENT);
+        }
+
+        if (empty($tags)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "tags"), MISSING_ARGUMENT);
+        }
+
+        return $this->request("createTags", array(
+            'resourceids' => $resourceids,
+            'resourcetype' => $resourceType,
+            'tags' => $tags,
+            'customer' => $customer,
+        ));
+    }
+    
+    /**
+    * Deleting resource tag(s)
+    *
+    * @param string $resourceids Delete tags for resource id(s)
+    * @param string $resourceType Delete tag by resource type
+    * @param string $tags Delete tags matching key/value pairs
+    */
+    
+    public function deleteTags($resourceids, $resourceType, $tags = "") {
+
+        if (empty($resourceids)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "resourceids"), MISSING_ARGUMENT);
+        }
+
+        if (empty($resourceType)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "resourceType"), MISSING_ARGUMENT);
+        }
+
+        return $this->request("deleteTags", array(
+            'resourceids' => $resourceids,
+            'resourcetype' => $resourceType,
+            'tags' => $tags,
+        ));
+    }
+    
+    /**
+    * List resource tag(s)
+    *
+    * @param string $account List resources by account. Must be used with the domainId
+    *         parameter.
+    * @param string $customer list by customer name
+    * @param string $domainId list only resources belonging to the domain specified
+    * @param string $isRecursive defaults to false, but if true, lists all resources f
+    *        rom the parent specified by the domainId till leaves.
+    * @param string $key list by key
+    * @param string $keyword List by keyword
+    * @param string $listAll If set to false, list only resources belonging to the com
+    *        mand&#039;s caller; if set to true - list resources that the caller is authorize
+    *        d to see. Default value is false
+    * @param string $page 
+    * @param string $pageSize 
+    * @param string $projectId list objects by project
+    * @param string $resourceid list by resource id
+    * @param string $resourceType list by resource type
+    * @param string $value list by value
+    * @param string $page Pagination
+    */
+    
+    public function listTags($account = "", $customer = "", $domainId = "", $isRecursive = "", $key = "", $keyword = "", $listAll = "", $page = "", $pageSize = "", $projectId = "", $resourceid = "", $resourceType = "", $value = "", $page = "") {
+
+        return $this->request("listTags", array(
+            'account' => $account,
+            'customer' => $customer,
+            'domainid' => $domainId,
+            'isrecursive' => $isRecursive,
+            'key' => $key,
+            'keyword' => $keyword,
+            'listall' => $listAll,
+            'page' => $page,
+            'pagesize' => $pageSize,
+            'projectid' => $projectId,
+            'resourceid' => $resourceid,
+            'resourcetype' => $resourceType,
+            'value' => $value,
             'page' => $page,
         ));
     }
@@ -6674,7 +7364,7 @@ class CloudStackClient extends BaseCloudStackClient {
     *        d to see. Default value is false
     * @param string $page 
     * @param string $pageSize 
-    * @param string $projectId list firewall rules by project
+    * @param string $projectId list objects by project
     * @param string $resourceType Type of resource to update. Values are 0, 1, 2, 3, a
     *        nd 4. 0 - Instance. Number of instances a user can create. 1 - IP. Number of pub
     *        lic IP addresses a user can own. 2 - Volume. Number of disk volumes a user can c
@@ -6701,286 +7391,25 @@ class CloudStackClient extends BaseCloudStackClient {
     }
     
     /**
-    * List hypervisors
-    *
-    * @param string $zoneId the zone id for listing hypervisors.
-    * @param string $page Pagination
-    */
-    
-    public function listHypervisors($zoneId = "", $page = "") {
-
-        return $this->request("listHypervisors", array(
-            'zoneid' => $zoneId,
-            'page' => $page,
-        ));
-    }
-    
-    /**
-    * Updates a hypervisor capabilities.
-    *
-    * @param string $id ID of the hypervisor capability
-    * @param string $maxGuestsLimit the max number of Guest VMs per host for this hype
-    *        rvisor.
-    * @param string $securityGroupEnabled set true to enable security group for this h
-    *        ypervisor.
-    */
-    
-    public function updateHypervisorCapabilities($id = "", $maxGuestsLimit = "", $securityGroupEnabled = "") {
-
-        return $this->request("updateHypervisorCapabilities", array(
-            'id' => $id,
-            'maxguestslimit' => $maxGuestsLimit,
-            'securitygroupenabled' => $securityGroupEnabled,
-        ));
-    }
-    
-    /**
-    * Lists all hypervisor capabilities.
-    *
-    * @param string $hypervisor the hypervisor for which to restrict the search
-    * @param string $id ID of the hypervisor capability
-    * @param string $keyword List by keyword
-    * @param string $page 
-    * @param string $pageSize 
-    * @param string $page Pagination
-    */
-    
-    public function listHypervisorCapabilities($hypervisor = "", $id = "", $keyword = "", $page = "", $pageSize = "", $page = "") {
-
-        return $this->request("listHypervisorCapabilities", array(
-            'hypervisor' => $hypervisor,
-            'id' => $id,
-            'keyword' => $keyword,
-            'page' => $page,
-            'pagesize' => $pageSize,
-            'page' => $page,
-        ));
-    }
-    
-    /**
-    * Adds F5 external load balancer appliance.
-    *
-    * @param string $password Password of the external load balancer appliance.
-    * @param string $url URL of the external load balancer appliance.
-    * @param string $userName Username of the external load balancer appliance.
-    * @param string $zoneId Zone in which to add the external load balancer appliance.
-    *        
-    */
-    
-    public function addExternalLoadBalancer($password, $url, $userName, $zoneId) {
-
-        if (empty($password)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "password"), MISSING_ARGUMENT);
-        }
-
-        if (empty($url)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "url"), MISSING_ARGUMENT);
-        }
-
-        if (empty($userName)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "userName"), MISSING_ARGUMENT);
-        }
-
-        if (empty($zoneId)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "zoneId"), MISSING_ARGUMENT);
-        }
-
-        return $this->request("addExternalLoadBalancer", array(
-            'password' => $password,
-            'url' => $url,
-            'username' => $userName,
-            'zoneid' => $zoneId,
-        ));
-    }
-    
-    /**
-    * Deletes a F5 external load balancer appliance added in a zone.
-    *
-    * @param string $id Id of the external loadbalancer appliance.
-    */
-    
-    public function deleteExternalLoadBalancer($id) {
-
-        if (empty($id)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
-        }
-
-        return $this->request("deleteExternalLoadBalancer", array(
-            'id' => $id,
-        ));
-    }
-    
-    /**
-    * Lists F5 external load balancer appliances added in a zone.
-    *
-    * @param string $keyword List by keyword
-    * @param string $page 
-    * @param string $pageSize 
-    * @param string $zoneId zone Id
-    * @param string $page Pagination
-    */
-    
-    public function listExternalLoadBalancers($keyword = "", $page = "", $pageSize = "", $zoneId = "", $page = "") {
-
-        return $this->request("listExternalLoadBalancers", array(
-            'keyword' => $keyword,
-            'page' => $page,
-            'pagesize' => $pageSize,
-            'zoneid' => $zoneId,
-            'page' => $page,
-        ));
-    }
-    
-    /**
-    * Adds an external firewall appliance
-    *
-    * @param string $password Password of the external firewall appliance.
-    * @param string $url URL of the external firewall appliance.
-    * @param string $userName Username of the external firewall appliance.
-    * @param string $zoneId Zone in which to add the external firewall appliance.
-    */
-    
-    public function addExternalFirewall($password, $url, $userName, $zoneId) {
-
-        if (empty($password)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "password"), MISSING_ARGUMENT);
-        }
-
-        if (empty($url)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "url"), MISSING_ARGUMENT);
-        }
-
-        if (empty($userName)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "userName"), MISSING_ARGUMENT);
-        }
-
-        if (empty($zoneId)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "zoneId"), MISSING_ARGUMENT);
-        }
-
-        return $this->request("addExternalFirewall", array(
-            'password' => $password,
-            'url' => $url,
-            'username' => $userName,
-            'zoneid' => $zoneId,
-        ));
-    }
-    
-    /**
-    * Deletes an external firewall appliance.
-    *
-    * @param string $id Id of the external firewall appliance.
-    */
-    
-    public function deleteExternalFirewall($id) {
-
-        if (empty($id)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
-        }
-
-        return $this->request("deleteExternalFirewall", array(
-            'id' => $id,
-        ));
-    }
-    
-    /**
-    * List external firewall appliances.
-    *
-    * @param string $zoneId zone Id
-    * @param string $keyword List by keyword
-    * @param string $page 
-    * @param string $pageSize 
-    * @param string $page Pagination
-    */
-    
-    public function listExternalFirewalls($zoneId, $keyword = "", $page = "", $pageSize = "", $page = "") {
-
-        if (empty($zoneId)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "zoneId"), MISSING_ARGUMENT);
-        }
-
-        return $this->request("listExternalFirewalls", array(
-            'zoneid' => $zoneId,
-            'keyword' => $keyword,
-            'page' => $page,
-            'pagesize' => $pageSize,
-            'page' => $page,
-        ));
-    }
-    
-    /**
-    * Updates a configuration.
-    *
-    * @param string $name the name of the configuration
-    * @param string $value the value of the configuration
-    */
-    
-    public function updateConfiguration($name, $value = "") {
-
-        if (empty($name)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "name"), MISSING_ARGUMENT);
-        }
-
-        return $this->request("updateConfiguration", array(
-            'name' => $name,
-            'value' => $value,
-        ));
-    }
-    
-    /**
-    * Lists all configurations.
-    *
-    * @param string $category lists configurations by category
-    * @param string $keyword List by keyword
-    * @param string $name lists configuration by name
-    * @param string $page 
-    * @param string $pageSize 
-    * @param string $page Pagination
-    */
-    
-    public function listConfigurations($category = "", $keyword = "", $name = "", $page = "", $pageSize = "", $page = "") {
-
-        return $this->request("listConfigurations", array(
-            'category' => $category,
-            'keyword' => $keyword,
-            'name' => $name,
-            'page' => $page,
-            'pagesize' => $pageSize,
-            'page' => $page,
-        ));
-    }
-    
-    /**
-    * Lists capabilities
-    *
-    * @param string $page Pagination
-    */
-    
-    public function listCapabilities($page = "") {
-
-        return $this->request("listCapabilities", array(
-            'page' => $page,
-        ));
-    }
-    
-    /**
     * Acquires and associates a public IP to an account.
     *
     * @param string $account the account to associate with this IP address
     * @param string $domainId the ID of the domain to associate with this IP address
     * @param string $networkId The network this ip address should be associated to.
     * @param string $projectId Deploy vm for the project
+    * @param string $vpcId the VPC you want the ip address to be associated with
     * @param string $zoneId the ID of the availability zone you want to acquire an pub
     *        lic IP address from
     */
     
-    public function associateIpAddress($account = "", $domainId = "", $networkId = "", $projectId = "", $zoneId = "") {
+    public function associateIpAddress($account = "", $domainId = "", $networkId = "", $projectId = "", $vpcId = "", $zoneId = "") {
 
         return $this->request("associateIpAddress", array(
             'account' => $account,
             'domainid' => $domainId,
             'networkid' => $networkId,
             'projectid' => $projectId,
+            'vpcid' => $vpcId,
             'zoneid' => $zoneId,
         ));
     }
@@ -7028,13 +7457,15 @@ class CloudStackClient extends BaseCloudStackClient {
     * @param string $pageSize 
     * @param string $physicalNetworkId lists all public IP addresses by physical netwo
     *        rk id
-    * @param string $projectId list firewall rules by project
+    * @param string $projectId list objects by project
+    * @param string $tags List resources by tags (key/value pairs)
     * @param string $vlanId lists all public IP addresses by VLAN ID
+    * @param string $vpcId List ips belonging to the VPC
     * @param string $zoneId lists all public IP addresses by Zone ID
     * @param string $page Pagination
     */
     
-    public function listPublicIpAddresses($account = "", $allocatedOnly = "", $associatedNetworkId = "", $domainId = "", $forLoadBalancing = "", $forVirtualNetwork = "", $id = "", $ipAddress = "", $isRecursive = "", $isSourceNat = "", $isStaticNat = "", $keyword = "", $listAll = "", $page = "", $pageSize = "", $physicalNetworkId = "", $projectId = "", $vlanId = "", $zoneId = "", $page = "") {
+    public function listPublicIpAddresses($account = "", $allocatedOnly = "", $associatedNetworkId = "", $domainId = "", $forLoadBalancing = "", $forVirtualNetwork = "", $id = "", $ipAddress = "", $isRecursive = "", $isSourceNat = "", $isStaticNat = "", $keyword = "", $listAll = "", $page = "", $pageSize = "", $physicalNetworkId = "", $projectId = "", $tags = "", $vlanId = "", $vpcId = "", $zoneId = "", $page = "") {
 
         return $this->request("listPublicIpAddresses", array(
             'account' => $account,
@@ -7054,7 +7485,9 @@ class CloudStackClient extends BaseCloudStackClient {
             'pagesize' => $pageSize,
             'physicalnetworkid' => $physicalNetworkId,
             'projectid' => $projectId,
+            'tags' => $tags,
             'vlanid' => $vlanId,
+            'vpcid' => $vpcId,
             'zoneid' => $zoneId,
             'page' => $page,
         ));
@@ -7105,42 +7538,66 @@ class CloudStackClient extends BaseCloudStackClient {
     }
     
     /**
-    * Puts storage pool into maintenance state
+    * Configure the LDAP context for this site.
     *
-    * @param string $id Primary storage ID
+    * @param string $hostName Hostname or ip address of the ldap server eg: my.ldap.co
+    *        m
+    * @param string $queryFilter You specify a query filter here, which narrows down t
+    *        he users, who can be part of this domain.
+    * @param string $searchBase The search base defines the starting point for the sea
+    *        rch in the directory tree Example:  dc=cloud,dc=com.
+    * @param string $bindDn Specify the distinguished name of a user with the search p
+    *        ermission on the directory.
+    * @param string $bindPass Enter the password.
+    * @param string $port Specify the LDAP port if required, default is 389.
+    * @param string $ssl Check Use SSL if the external LDAP server is configured for L
+    *        DAP over SSL.
+    * @param string $trustStore Enter the path to trust certificates store.
+    * @param string $trustStorePass Enter the password for trust store.
     */
     
-    public function enableStorageMaintenance($id) {
+    public function ldapConfig($hostName, $queryFilter, $searchBase, $bindDn = "", $bindPass = "", $port = "", $ssl = "", $trustStore = "", $trustStorePass = "") {
 
-        if (empty($id)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
+        if (empty($hostName)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "hostName"), MISSING_ARGUMENT);
         }
 
-        return $this->request("enableStorageMaintenance", array(
-            'id' => $id,
+        if (empty($queryFilter)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "queryFilter"), MISSING_ARGUMENT);
+        }
+
+        if (empty($searchBase)) {
+            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "searchBase"), MISSING_ARGUMENT);
+        }
+
+        return $this->request("ldapConfig", array(
+            'hostname' => $hostName,
+            'queryfilter' => $queryFilter,
+            'searchbase' => $searchBase,
+            'binddn' => $bindDn,
+            'bindpass' => $bindPass,
+            'port' => $port,
+            'ssl' => $ssl,
+            'truststore' => $trustStore,
+            'truststorepass' => $trustStorePass,
         ));
     }
     
     /**
-    * Cancels maintenance for primary storage
+    * Remove the LDAP context for this site.
     *
-    * @param string $id the primary storage ID
     */
     
-    public function cancelStorageMaintenance($id) {
+    public function ldapRemove() {
 
-        if (empty($id)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "id"), MISSING_ARGUMENT);
-        }
-
-        return $this->request("cancelStorageMaintenance", array(
-            'id' => $id,
+        return $this->request("ldapRemove", array(
         ));
     }
     
     /**
     * Lists all supported OS types for this cloud.
     *
+    * @param string $description list os by description
     * @param string $id list by Os type Id
     * @param string $keyword List by keyword
     * @param string $osCategoryId list by Os Category id
@@ -7149,9 +7606,10 @@ class CloudStackClient extends BaseCloudStackClient {
     * @param string $page Pagination
     */
     
-    public function listOsTypes($id = "", $keyword = "", $osCategoryId = "", $page = "", $pageSize = "", $page = "") {
+    public function listOsTypes($description = "", $id = "", $keyword = "", $osCategoryId = "", $page = "", $pageSize = "", $page = "") {
 
         return $this->request("listOsTypes", array(
+            'description' => $description,
             'id' => $id,
             'keyword' => $keyword,
             'oscategoryid' => $osCategoryId,
@@ -7166,16 +7624,18 @@ class CloudStackClient extends BaseCloudStackClient {
     *
     * @param string $id list Os category by id
     * @param string $keyword List by keyword
+    * @param string $name list os category by name
     * @param string $page 
     * @param string $pageSize 
     * @param string $page Pagination
     */
     
-    public function listOsCategories($id = "", $keyword = "", $page = "", $pageSize = "", $page = "") {
+    public function listOsCategories($id = "", $keyword = "", $name = "", $page = "", $pageSize = "", $page = "") {
 
         return $this->request("listOsCategories", array(
             'id' => $id,
             'keyword' => $keyword,
+            'name' => $name,
             'page' => $page,
             'pagesize' => $pageSize,
             'page' => $page,
@@ -7203,7 +7663,7 @@ class CloudStackClient extends BaseCloudStackClient {
     *        d to see. Default value is false
     * @param string $page 
     * @param string $pageSize 
-    * @param string $projectId list firewall rules by project
+    * @param string $projectId list objects by project
     * @param string $startDate the start date range of the list you want to retrieve (
     *        use format &quot;yyyy-MM-dd&quot; or the new format &quot;yyyy-MM-dd HH:mm:ss&qu
     *        ot;)
@@ -7332,37 +7792,6 @@ class CloudStackClient extends BaseCloudStackClient {
     }
     
     /**
-    * Register a public key in a keypair under a certain name
-    *
-    * @param string $name Name of the keypair
-    * @param string $publicKey Public key material of the keypair
-    * @param string $account an optional account for the ssh key. Must be used with do
-    *        mainId.
-    * @param string $domainId an optional domainId for the ssh key. If the account par
-    *        ameter is used, domainId must also be used.
-    * @param string $projectId an optional project for the ssh key
-    */
-    
-    public function registerSSHKeyPair($name, $publicKey, $account = "", $domainId = "", $projectId = "") {
-
-        if (empty($name)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "name"), MISSING_ARGUMENT);
-        }
-
-        if (empty($publicKey)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "publicKey"), MISSING_ARGUMENT);
-        }
-
-        return $this->request("registerSSHKeyPair", array(
-            'name' => $name,
-            'publickey' => $publicKey,
-            'account' => $account,
-            'domainid' => $domainId,
-            'projectid' => $projectId,
-        ));
-    }
-    
-    /**
     * Logs out the user
     *
     */
@@ -7405,48 +7834,17 @@ class CloudStackClient extends BaseCloudStackClient {
     }
     
     /**
-    * Configure the LDAP context for this site.
+    * List hypervisors
     *
-    * @param string $hostName Hostname or ip address of the ldap server eg: my.ldap.co
-    *        m
-    * @param string $queryFilter You specify a query filter here, which narrows down t
-    *        he users, who can be part of this domain.
-    * @param string $searchBase The search base defines the starting point for the sea
-    *        rch in the directory tree Example:  dc=cloud,dc=com.
-    * @param string $bindDn Specify the distinguished name of a user with the search p
-    *        ermission on the directory.
-    * @param string $bindPass Enter the password.
-    * @param string $port Specify the LDAP port if required, default is 389.
-    * @param string $ssl Check Use SSL if the external LDAP server is configured for L
-    *        DAP over SSL.
-    * @param string $trustStore Enter the path to trust certificates store.
-    * @param string $trustStorePass Enter the password for trust store.
+    * @param string $zoneId the zone id for listing hypervisors.
+    * @param string $page Pagination
     */
     
-    public function ldapConfig($hostName, $queryFilter, $searchBase, $bindDn = "", $bindPass = "", $port = "", $ssl = "", $trustStore = "", $trustStorePass = "") {
+    public function listHypervisors($zoneId = "", $page = "") {
 
-        if (empty($hostName)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "hostName"), MISSING_ARGUMENT);
-        }
-
-        if (empty($queryFilter)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "queryFilter"), MISSING_ARGUMENT);
-        }
-
-        if (empty($searchBase)) {
-            throw new CloudStackClientException(sprintf(MISSING_ARGUMENT_MSG, "searchBase"), MISSING_ARGUMENT);
-        }
-
-        return $this->request("ldapConfig", array(
-            'hostname' => $hostName,
-            'queryfilter' => $queryFilter,
-            'searchbase' => $searchBase,
-            'binddn' => $bindDn,
-            'bindpass' => $bindPass,
-            'port' => $port,
-            'ssl' => $ssl,
-            'truststore' => $trustStore,
-            'truststorepass' => $trustStorePass,
+        return $this->request("listHypervisors", array(
+            'zoneid' => $zoneId,
+            'page' => $page,
         ));
     }
     
